@@ -1,0 +1,27 @@
+{
+  "is_processing": false,
+  "status_message": "🎉 加密完成！所有文件已準備下載",
+  "progress": 100,
+  "result_files": [
+    {
+      "name": "folder_encrypted_20250530_163928.bin",
+      "path": "processed\\folder_encrypted_20250530_163928.bin",
+      "type": "encrypted"
+    },
+    {
+      "name": "aes_key_encrypted_20250530_163928.bin",
+      "path": "processed\\aes_key_encrypted_20250530_163928.bin",
+      "type": "key"
+    },
+    {
+      "name": "private_key.pem",
+      "path": "processed\\private_key.pem",
+      "type": "private_key"
+    },
+    {
+      "name": "public_key.pem",
+      "path": "processed\\public_key.pem",
+      "type": "public_key"
+    }
+  ]
+}

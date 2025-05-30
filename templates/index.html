@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>資料夾加密/解密工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 50px auto;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+            padding: 20px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .progress {
+            height: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            transition: width 0.6s ease;
+        }
+        
+        .status-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+        }
+        
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .file-input-label:hover {
+            background: #e9ecef;
+            border-color: #4CAF50;
+        }
+        
+        .file-list {
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .file-item {
+            background: #e9ecef;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .result-files {
+            margin-top: 20px;
+        }
+        
+        .result-file {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        .icon {
+            margin-right: 10px;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .btn-check:checked + .btn-outline-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+        
+        .btn-outline-primary {
+            border-color: #667eea;
+            color: #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <div class="header">
+                <h1><i class="fas fa-shield-alt icon"></i>資料夾加密/解密工具</h1>
+                <p class="mb-0">使用AES-GCM和RSA混合加密技術保護您的資料</p>
+            </div>
+            
+            <div class="content">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- 加密區域 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="fas fa-lock icon"></i>文件加密</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="encryptForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label">選擇上傳方式：</label>
+                                <div class="btn-group w-100 mb-3" role="group">
+                                    <input type="radio" class="btn-check" name="uploadType" id="uploadFiles" value="files" checked>
+                                    <label class="btn btn-outline-primary" for="uploadFiles">
+                                        <i class="fas fa-file icon"></i>選擇文件
+                                    </label>
+                                    
+                                    <input type="radio" class="btn-check" name="uploadType" id="uploadFolder" value="folder">
+                                    <label class="btn btn-outline-primary" for="uploadFolder">
+                                        <i class="fas fa-folder icon"></i>選擇資料夾
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" id="uploadLabel">選擇要加密的文件（可多選）：</label>
+                                <div class="file-input-container">
+                                    <input type="file" 
+                                           class="file-input" 
+                                           id="encryptFiles" 
+                                           name="files" 
+                                           multiple 
+                                           required>
+                                    <label for="encryptFiles" class="file-input-label" id="uploadLabelText">
+                                        <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i><br>
+                                        點擊此處選擇文件或拖拽文件到此處
+                                    </label>
+                                </div>
+                                <div id="encryptFileList" class="file-list"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-lock icon"></i>開始加密
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- 解密區域 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="fas fa-unlock icon"></i>文件解密</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="decryptForm" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="encryptedFile" class="form-label">加密檔案 (.bin)：</label>
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="encryptedFile" 
+                                           name="encrypted_file" 
+                                           accept=".bin" 
+                                           required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="keyFile" class="form-label">AES金鑰檔案 (.bin)：</label>
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="keyFile" 
+                                           name="key_file" 
+                                           accept=".bin" 
+                                           required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-unlock icon"></i>開始解密
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- 狀態和進度 -->
+                <div class="status-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">處理狀態</h5>
+                        <div>
+                            <span id="statusBadge" class="badge bg-secondary me-2">等待中</span>
+                            <button onclick="clearFiles()" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash icon"></i>清理文件
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="progressContainer" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted">處理進度</small>
+                            <small id="progressText" class="text-muted">0%</small>
+                        </div>
+                        <div class="progress mb-3">
+                            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="statusMessage" class="text-muted mb-3">
+                        <i class="fas fa-info-circle icon"></i>等待操作...
+                    </div>
+                    
+                    <div id="processingSpinner" style="display: none;" class="text-center mb-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">處理中...</span>
+                        </div>
+                        <div class="mt-2 text-muted">正在處理，請稍候...</div>
+                    </div>
+                    
+                    <div id="resultFiles" class="result-files"></div>
+                    
+                    <div id="completionAlert" style="display: none;" class="alert alert-success alert-dismissible fade show mt-3">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>處理完成！</strong> 您可以下載生成的文件。
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let statusCheckInterval;
+        
+        // 上傳方式切換
+        document.querySelectorAll('input[name="uploadType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const fileInput = document.getElementById('encryptFiles');
+                const uploadLabel = document.getElementById('uploadLabel');
+                const uploadLabelText = document.getElementById('uploadLabelText');
+                
+                if (this.value === 'folder') {
+                    fileInput.setAttribute('webkitdirectory', '');
+                    fileInput.removeAttribute('multiple');
+                    uploadLabel.textContent = '選擇要加密的資料夾：';
+                    uploadLabelText.innerHTML = '<i class="fas fa-cloud-upload-alt fa-2x mb-2"></i><br>點擊此處選擇資料夾';
+                } else {
+                    fileInput.removeAttribute('webkitdirectory');
+                    fileInput.setAttribute('multiple', '');
+                    uploadLabel.textContent = '選擇要加密的文件（可多選）：';
+                    uploadLabelText.innerHTML = '<i class="fas fa-cloud-upload-alt fa-2x mb-2"></i><br>點擊此處選擇文件或拖拽文件到此處';
+                }
+                
+                // 清空已選擇的文件
+                fileInput.value = '';
+                document.getElementById('encryptFileList').innerHTML = '';
+            });
+        });
+        
+        // 文件選擇顯示
+        document.getElementById('encryptFiles').addEventListener('change', function(e) {
+            const fileList = document.getElementById('encryptFileList');
+            fileList.innerHTML = '';
+            
+            if (e.target.files.length > 0) {
+                let totalSize = 0;
+                Array.from(e.target.files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    
+                    // 顯示文件路徑（如果是資料夾選擇）
+                    let displayName = file.name;
+                    if (file.webkitRelativePath) {
+                        displayName = file.webkitRelativePath;
+                    }
+                    
+                    fileItem.innerHTML = `<i class="fas fa-file icon"></i>${displayName} (${formatFileSize(file.size)})`;
+                    fileList.appendChild(fileItem);
+                    totalSize += file.size;
+                });
+                
+                // 顯示總大小
+                if (e.target.files.length > 1) {
+                    const totalItem = document.createElement('div');
+                    totalItem.className = 'file-item';
+                    totalItem.style.fontWeight = 'bold';
+                    totalItem.innerHTML = `<i class="fas fa-calculator icon"></i>總計: ${e.target.files.length} 個文件, ${formatFileSize(totalSize)}`;
+                    fileList.appendChild(totalItem);
+                }
+            }
+        });
+        
+        // 加密表單提交
+        document.getElementById('encryptForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const files = document.getElementById('encryptFiles').files;
+            
+            if (files.length === 0) {
+                alert('請選擇要加密的文件');
+                return;
+            }
+            
+            // 添加所有文件到FormData
+            Array.from(files).forEach(file => {
+                formData.append('files', file);
+            });
+            
+            fetch('/encrypt', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'started') {
+                    startStatusCheck();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                updateStatus('加密失敗：' + error.message);
+            });
+        });
+        
+        // 解密表單提交
+        document.getElementById('decryptForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('/decrypt', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'started') {
+                    startStatusCheck();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                updateStatus('解密失敗：' + error.message);
+            });
+        });
+        
+        // 開始狀態檢查
+        function startStatusCheck() {
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('processingSpinner').style.display = 'block';
+            document.getElementById('completionAlert').style.display = 'none';
+            
+            // 更新狀態徽章
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = '處理中';
+            statusBadge.className = 'badge bg-warning me-2';
+            
+            updateStatus('🔄 開始處理...', 0);
+            
+            statusCheckInterval = setInterval(checkStatus, 1000);
+        }
+        
+        // 檢查處理狀態
+        function checkStatus() {
+            fetch('/status')
+            .then(response => response.json())
+            .then(data => {
+                updateStatus(data.status_message, data.progress);
+                
+                if (!data.is_processing) {
+                    clearInterval(statusCheckInterval);
+                    document.getElementById('processingSpinner').style.display = 'none';
+                    
+                    if (data.progress === 100) {
+                        // 成功完成
+                        const statusBadge = document.getElementById('statusBadge');
+                        statusBadge.textContent = '完成';
+                        statusBadge.className = 'badge bg-success me-2';
+                        
+                        document.getElementById('completionAlert').style.display = 'block';
+                        showResultFiles(data.result_files);
+                        
+                        // 隱藏進度條
+                        setTimeout(() => {
+                            document.getElementById('progressContainer').style.display = 'none';
+                        }, 2000);
+                    } else {
+                        // 處理失敗
+                        const statusBadge = document.getElementById('statusBadge');
+                        statusBadge.textContent = '失敗';
+                        statusBadge.className = 'badge bg-danger me-2';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                clearInterval(statusCheckInterval);
+                document.getElementById('processingSpinner').style.display = 'none';
+                
+                const statusBadge = document.getElementById('statusBadge');
+                statusBadge.textContent = '錯誤';
+                statusBadge.className = 'badge bg-danger me-2';
+            });
+        }
+        
+        // 更新狀態顯示
+        function updateStatus(message, progress = null) {
+            document.getElementById('statusMessage').innerHTML = 
+                `<i class="fas fa-info-circle icon"></i>${message}`;
+            
+            if (progress !== null) {
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressText').textContent = progress + '%';
+                
+                // 根據進度更改進度條顏色
+                const progressBar = document.getElementById('progressBar');
+                if (progress === 100) {
+                    progressBar.className = 'progress-bar bg-success';
+                } else if (progress > 0) {
+                    progressBar.className = 'progress-bar bg-primary';
+                }
+            }
+        }
+        
+        // 顯示結果文件
+        function showResultFiles(files) {
+            const container = document.getElementById('resultFiles');
+            container.innerHTML = '';
+            
+            if (files && files.length > 0) {
+                files.forEach(file => {
+                    const fileDiv = document.createElement('div');
+                    fileDiv.className = 'result-file';
+                    
+                    let icon = 'fas fa-file';
+                    if (file.type === 'encrypted') icon = 'fas fa-lock';
+                    else if (file.type === 'key') icon = 'fas fa-key';
+                    else if (file.type === 'private_key') icon = 'fas fa-user-secret';
+                    else if (file.type === 'public_key') icon = 'fas fa-share-alt';
+                    else if (file.type === 'decrypted_zip') icon = 'fas fa-file-archive';
+                    
+                    fileDiv.innerHTML = `
+                        <span><i class="${icon} icon"></i>${file.name}</span>
+                        <a href="/download/${file.name}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download"></i> 下載
+                        </a>
+                    `;
+                    container.appendChild(fileDiv);
+                });
+            }
+        }
+        
+        // 清理文件
+        function clearFiles() {
+            if (confirm('確定要清理所有文件嗎？')) {
+                window.location.href = '/clear';
+            }
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 拖拽上傳支援
+        const dropZone = document.querySelector('.file-input-label');
+        
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#4CAF50';
+            this.style.backgroundColor = '#e8f5e8';
+        });
+        
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#667eea';
+            this.style.backgroundColor = '#f8f9fa';
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#667eea';
+            this.style.backgroundColor = '#f8f9fa';
+            
+            const files = e.dataTransfer.files;
+            const fileInput = document.getElementById('encryptFiles');
+            fileInput.files = files;
+            
+            // 觸發change事件
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+        });
+    </script>
+</body>
+</html> 
