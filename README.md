@@ -287,7 +287,6 @@ A: 檢查網絡連接，確保可以訪問CDN資源
 
 如有問題或建議，請：
 - 創建 GitHub Issue
-- 發送郵件至：[your-email@example.com]
 
 ## 🔄 更新日誌
 
