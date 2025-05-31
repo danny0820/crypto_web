@@ -27,11 +27,15 @@ import secrets  # 用於生成安全的隨機數據
 import shutil   # 用於文件夾操作
 import json     # 用於狀態持久化
 from datetime import datetime
-from flask import Flask, request, render_template, send_file, jsonify, flash, redirect, url_for
+from flask import Flask, request, render_template, send_file, jsonify, flash, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename  # 用於安全化文件名
 import tempfile  # 用於創建臨時文件
 import threading  # 用於後台處理
 import time
+import base64  # 用於圖片編碼
+from PIL import Image  # 用於圖片處理
+import io
+import numpy as np
 
 # 加密相關庫
 from cryptography.hazmat.primitives.asymmetric import rsa, padding  # RSA加密
@@ -89,7 +93,8 @@ def load_status():
         'is_processing': False,    # 是否正在處理
         'status_message': '',      # 當前狀態消息
         'progress': 0,             # 處理進度 (0-100)
-        'result_files': []         # 結果文件列表
+        'result_files': [],         # 結果文件列表
+        'decrypted_images': []     # 新增：存儲解密後的圖片預覽
     }
 
 def save_status(status):
@@ -525,23 +530,38 @@ def decrypt_files_process(encrypted_file_path, key_file_path):
     2. 解密AES密鑰
     3. 解密數據文件
     4. 還原ZIP文件
-    5. 解壓縮到目標目錄
+    5. 解壓縮到臨時目錄（僅用於圖片預覽）
+    6. 生成圖片預覽（如果有圖片文件）
     
     Args:
         encrypted_file_path (str): 加密文件的路徑
         key_file_path (str): 加密密鑰文件的路徑
     """
     global processing_status
+    temp_extracted_folder = None  # 用於追踪臨時解壓目錄
+    
     try:
         # 設置處理狀態
         processing_status['is_processing'] = True
         processing_status['result_files'] = []
+        processing_status['decrypted_images'] = []  # 新增：存儲解密後的圖片預覽
+        
+        # 將加密文件複製到 processed 目錄以便預覽
+        original_filename = os.path.basename(encrypted_file_path)
+        processed_encrypted_path = os.path.join(app.config['PROCESSED_FOLDER'], original_filename)
+        
+        # 如果文件不在processed目錄中，複製過去
+        if not os.path.exists(processed_encrypted_path):
+            shutil.copy2(encrypted_file_path, processed_encrypted_path)
+            print(f"複製加密文件到processed目錄: {processed_encrypted_path}")
+        
+        processing_status['source_encrypted_file'] = original_filename  # 保存原始加密文件名
         save_status(processing_status)  # 保存狀態
         
         # 生成時間戳用於輸出文件名
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         decrypted_zip = os.path.join(app.config['PROCESSED_FOLDER'], f'decrypted_folder_{timestamp}.zip')
-        output_folder = os.path.join(app.config['PROCESSED_FOLDER'], f'decrypted_{timestamp}')
+        temp_extracted_folder = os.path.join(app.config['PROCESSED_FOLDER'], f'temp_extracted_{timestamp}')
 
         # 步驟1：讀取RSA私鑰
         update_status("讀取RSA私鑰...", 10)
@@ -579,16 +599,44 @@ def decrypt_files_process(encrypted_file_path, key_file_path):
         with open(decrypted_zip, 'wb') as f:
             f.write(plaintext)
 
-        # 步驟7：解壓縮ZIP文件到目標目錄
-        update_status("解壓縮還原資料夾...", 90)
-        os.makedirs(output_folder, exist_ok=True)
-        unzip_folder(decrypted_zip, output_folder)
-
-        # 設置結果文件列表
+        # 步驟7：解壓縮到臨時目錄（僅用於圖片預覽）
+        update_status("處理解密後的圖片...", 90)
+        os.makedirs(temp_extracted_folder, exist_ok=True)
+        unzip_folder(decrypted_zip, temp_extracted_folder)
+        
+        decrypted_images = []
+        
+        # 遍歷解壓後的文件，找出圖片文件
+        for root, dirs, files in os.walk(temp_extracted_folder):
+            for file in files:
+                if is_image_file(file):
+                    try:
+                        file_path = os.path.join(root, file)
+                        relative_path = os.path.relpath(file_path, temp_extracted_folder)
+                        
+                        # 讀取圖片文件
+                        with open(file_path, 'rb') as f:
+                            image_data = f.read()
+                        
+                        # 生成縮略圖
+                        thumbnail = resize_image_for_preview(image_data)
+                        
+                        if thumbnail:
+                            decrypted_images.append({
+                                'filename': relative_path,
+                                'size': len(image_data),
+                                'thumbnail': thumbnail
+                            })
+                            
+                    except Exception as e:
+                        print(f"處理解密圖片 {file} 失敗: {e}")
+                        continue
+        
+        # 設置結果文件列表（只包含ZIP文件）
         processing_status['result_files'] = [
-            {'name': f'decrypted_folder_{timestamp}.zip', 'path': decrypted_zip, 'type': 'decrypted_zip'},
-            {'name': f'decrypted_folder_{timestamp}', 'path': output_folder, 'type': 'decrypted_folder'}
+            {'name': f'decrypted_folder_{timestamp}.zip', 'path': decrypted_zip, 'type': 'decrypted_zip'}
         ]
+        processing_status['decrypted_images'] = decrypted_images  # 添加解密後的圖片預覽
         save_status(processing_status)  # 保存狀態
 
         update_status("解密與還原完成！", 100)
@@ -597,9 +645,136 @@ def decrypt_files_process(encrypted_file_path, key_file_path):
         # 處理解密過程中的錯誤
         update_status(f"解密過程發生錯誤：{str(e)}", 0)
     finally:
+        # 清理臨時解壓目錄
+        if temp_extracted_folder and os.path.exists(temp_extracted_folder):
+            try:
+                shutil.rmtree(temp_extracted_folder)
+                print(f"清理臨時解壓目錄: {temp_extracted_folder}")
+            except Exception as e:
+                print(f"清理臨時目錄失敗: {e}")
+        
         # 標記處理完成
         processing_status['is_processing'] = False
         save_status(processing_status)  # 保存狀態
+
+# ============================
+# 圖片處理相關函數
+# ============================
+
+def is_image_file(filename):
+    """
+    檢查文件是否為圖片類型
+    
+    Args:
+        filename (str): 文件名
+        
+    Returns:
+        bool: 是否為圖片文件
+    """
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.svg'}
+    return any(filename.lower().endswith(ext) for ext in image_extensions)
+
+def create_encrypted_visualization(file_path, max_width=300, max_height=300):
+    """
+    為加密文件創建視覺化圖像（顯示為雜訊效果）
+    
+    Args:
+        file_path (str): 加密文件路徑
+        max_width (int): 最大寬度
+        max_height (int): 最大高度
+        
+    Returns:
+        str: Base64編碼的圖片數據
+    """
+    try:
+        # 讀取加密文件的前 max_width * max_height 個字節
+        with open(file_path, 'rb') as f:
+            data = f.read(max_width * max_height)
+        
+        if len(data) == 0:
+            print("警告：加密文件為空")
+            return None
+        
+        # 如果數據不足，用隨機數據填充
+        if len(data) < max_width * max_height:
+            import random
+            random.seed(42)  # 固定種子保證一致性
+            additional_data = bytes([random.randint(0, 255) for _ in range(max_width * max_height - len(data))])
+            data += additional_data
+        
+        # 將字節數據轉換為圖像
+        # 創建灰度圖像來顯示加密數據的隨機性
+        img_array = np.frombuffer(data[:max_width * max_height], dtype=np.uint8)
+        img_array = img_array.reshape((max_height, max_width))
+        
+        # 轉換為PIL圖像
+        img = Image.fromarray(img_array, mode='L')
+        
+        # 轉換為RGB模式並添加顏色效果（紅色調）
+        img_rgb = Image.new('RGB', (max_width, max_height))
+        for x in range(max_width):
+            for y in range(max_height):
+                gray_value = img.getpixel((x, y))
+                # 創建紅色調的雜訊效果
+                img_rgb.putpixel((x, y), (gray_value, gray_value // 3, gray_value // 3))
+        
+        # 轉換為base64
+        buffer = io.BytesIO()
+        img_rgb.save(buffer, format='PNG')
+        img_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        return f"data:image/png;base64,{img_base64}"
+        
+    except Exception as e:
+        print(f"創建加密文件視覺化失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def resize_image_for_preview(image_data, max_width=300, max_height=300):
+    """
+    調整圖片大小用於預覽
+    
+    Args:
+        image_data (bytes): 圖片數據
+        max_width (int): 最大寬度
+        max_height (int): 最大高度
+        
+    Returns:
+        str: Base64編碼的縮略圖數據
+    """
+    try:
+        # 從字節數據創建PIL圖像
+        img = Image.open(io.BytesIO(image_data))
+        
+        # 轉換為RGB模式（如果不是的話）
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # 計算新的尺寸，保持寬高比
+        width, height = img.size
+        aspect_ratio = width / height
+        
+        if width > height:
+            new_width = min(max_width, width)
+            new_height = int(new_width / aspect_ratio)
+        else:
+            new_height = min(max_height, height)
+            new_width = int(new_height * aspect_ratio)
+        
+        # 調整大小
+        img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # 轉換為base64
+        buffer = io.BytesIO()
+        img_resized.save(buffer, format='PNG')
+        img_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        return f"data:image/png;base64,{img_base64}"
+        
+    except Exception as e:
+        print(f"圖片調整大小失敗: {e}")
+        return None
 
 # ============================
 # Flask 路由定義
@@ -718,13 +893,17 @@ def download_file(filename):
     """
     文件下載路由
     
+    支援文件下載
+    
     Args:
         filename (str): 要下載的文件名
     """
     file_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
-    if os.path.exists(file_path):
+    
+    if os.path.exists(file_path) and os.path.isfile(file_path):
         return send_file(file_path, as_attachment=True)
     else:
+        print(f"文件不存在: {file_path}")
         return "文件不存在", 404
 
 @app.route('/clear')
@@ -758,6 +937,123 @@ def clear_files():
         flash(f'清理文件時發生錯誤：{str(e)}')
     
     return redirect(url_for('index'))
+
+@app.route('/preview_images', methods=['POST'])
+def preview_images():
+    """
+    圖片預覽路由
+    
+    處理上傳的文件，提取其中的圖片文件並返回預覽數據
+    """
+    try:
+        if 'files' not in request.files:
+            return jsonify({'error': '沒有選擇文件'}), 400
+        
+        files = request.files.getlist('files')
+        image_previews = []
+        
+        for file in files:
+            if file.filename and is_image_file(file.filename):
+                try:
+                    # 重置文件指針
+                    file.seek(0)
+                    file_data = file.read()
+                    
+                    # 生成縮略圖
+                    thumbnail = resize_image_for_preview(file_data)
+                    
+                    if thumbnail:
+                        image_previews.append({
+                            'filename': file.filename,
+                            'size': len(file_data),
+                            'thumbnail': thumbnail
+                        })
+                        
+                except Exception as e:
+                    print(f"處理圖片 {file.filename} 失敗: {e}")
+                    continue
+        
+        return jsonify({
+            'status': 'success',
+            'images': image_previews
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'預覽失敗: {str(e)}'}), 500
+
+@app.route('/preview_encrypted/<filename>')
+def preview_encrypted(filename):
+    """
+    加密文件預覽路由
+    
+    為加密的 .bin 文件生成視覺化預覽
+    """
+    try:
+        file_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
+        
+        if not os.path.exists(file_path):
+            return jsonify({'error': '文件不存在'}), 404
+        
+        # 生成加密文件的視覺化
+        encrypted_preview = create_encrypted_visualization(file_path)
+        
+        if encrypted_preview:
+            return jsonify({
+                'status': 'success',
+                'preview': encrypted_preview,
+                'filename': filename
+            })
+        else:
+            return jsonify({'error': '無法生成預覽'}), 500
+            
+    except Exception as e:
+        return jsonify({'error': f'預覽失敗: {str(e)}'}), 500
+
+@app.route('/test_preview.html')
+def test_preview():
+    """測試加密預覽功能的頁面"""
+    return send_from_directory('.', 'test_preview.html')
+
+@app.route('/preview_uploaded_encrypted', methods=['POST'])
+def preview_uploaded_encrypted():
+    """
+    處理上傳的加密文件並生成預覽
+    """
+    try:
+        if 'encrypted_file' not in request.files:
+            return jsonify({'error': '沒有選擇文件'}), 400
+        
+        file = request.files['encrypted_file']
+        
+        if file.filename == '' or not file.filename.endswith('.bin'):
+            return jsonify({'error': '請選擇 .bin 加密文件'}), 400
+        
+        # 保存臨時文件
+        temp_filename = secure_filename(file.filename)
+        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], f'temp_preview_{temp_filename}')
+        
+        file.save(temp_path)
+        
+        try:
+            # 生成加密文件的視覺化
+            encrypted_preview = create_encrypted_visualization(temp_path)
+            
+            if encrypted_preview:
+                return jsonify({
+                    'status': 'success',
+                    'preview': encrypted_preview,
+                    'filename': file.filename
+                })
+            else:
+                return jsonify({'error': '無法生成預覽'}), 500
+                
+        finally:
+            # 清理臨時文件
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            
+    except Exception as e:
+        return jsonify({'error': f'預覽失敗: {str(e)}'}), 500
 
 # ============================
 # 應用程序啟動

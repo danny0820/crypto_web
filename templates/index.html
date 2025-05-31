@@ -17,8 +17,8 @@
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            margin: 50px auto;
-            max-width: 800px;
+            margin: 20px auto;
+            max-width: 1400px;
             overflow: hidden;
         }
         
@@ -30,7 +30,7 @@
         }
         
         .content {
-            padding: 40px;
+            padding: 30px;
         }
         
         .card {
@@ -204,6 +204,157 @@
             border-color: #667eea;
             color: white;
         }
+        
+        /* 新增圖片預覽樣式 */
+        .image-preview-container {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px dashed #e0e0e0;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        
+        .image-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .image-preview-item {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-preview-item:hover {
+            transform: translateY(-3px);
+        }
+        
+        .image-preview-item img {
+            max-width: 100%;
+            max-height: 120px;
+            border-radius: 5px;
+            object-fit: contain;
+        }
+        
+        .image-preview-filename {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+        
+        .image-preview-size {
+            font-size: 0.7em;
+            color: #999;
+            margin-top: 2px;
+        }
+        
+        /* 對比區域優化 */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .comparison-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .comparison-item img {
+            max-width: 100%;
+            max-height: 300px; /* 增加高度 */
+            border-radius: 5px;
+            object-fit: contain;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .comparison-item img:hover {
+            transform: scale(1.02);
+        }
+        
+        .comparison-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        
+        .before-title {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+        
+        .after-title {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+        }
+        
+        .preview-toggle-btn {
+            margin-top: 10px;
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            border: none;
+            color: white;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.8em;
+        }
+        
+        /* 新增響應式佈局 */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-container {
+                max-width: 95%;
+                margin: 10px auto;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .image-preview-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
     </style>
 </head>
 <body>
@@ -227,124 +378,173 @@
                     {% endif %}
                 {% endwith %}
                 
-                <!-- 加密區域 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="mb-0"><i class="fas fa-lock icon"></i>文件加密</h3>
-                    </div>
-                    <div class="card-body">
-                        <form id="encryptForm" enctype="multipart/form-data">
-                            <div class="mb-3">
-                                <label class="form-label">選擇上傳方式：</label>
-                                <div class="btn-group w-100 mb-3" role="group">
-                                    <input type="radio" class="btn-check" name="uploadType" id="uploadFiles" value="files" checked>
-                                    <label class="btn btn-outline-primary" for="uploadFiles">
-                                        <i class="fas fa-file icon"></i>選擇文件
-                                    </label>
+                <!-- 主要佈局 -->
+                <div class="main-layout">
+                    <!-- 左側面板：加密解密控制 -->
+                    <div class="left-panel">
+                        <!-- 加密區域 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="mb-0"><i class="fas fa-lock icon"></i>文件加密</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="encryptForm" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label class="form-label">選擇上傳方式：</label>
+                                        <div class="btn-group w-100 mb-3" role="group">
+                                            <input type="radio" class="btn-check" name="uploadType" id="uploadFiles" value="files" checked>
+                                            <label class="btn btn-outline-primary" for="uploadFiles">
+                                                <i class="fas fa-file icon"></i>選擇文件
+                                            </label>
+                                            
+                                            <input type="radio" class="btn-check" name="uploadType" id="uploadFolder" value="folder">
+                                            <label class="btn btn-outline-primary" for="uploadFolder">
+                                                <i class="fas fa-folder icon"></i>選擇資料夾
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" id="uploadLabel">選擇要加密的文件（可多選）：</label>
+                                        <div class="file-input-container">
+                                            <input type="file" 
+                                                   class="file-input" 
+                                                   id="encryptFiles" 
+                                                   name="files" 
+                                                   multiple 
+                                                   required>
+                                            <label for="encryptFiles" class="file-input-label" id="uploadLabelText">
+                                                <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i><br>
+                                                點擊此處選擇文件或拖拽文件到此處
+                                            </label>
+                                        </div>
+                                        <div id="encryptFileList" class="file-list"></div>
+                                    </div>
                                     
-                                    <input type="radio" class="btn-check" name="uploadType" id="uploadFolder" value="folder">
-                                    <label class="btn btn-outline-primary" for="uploadFolder">
-                                        <i class="fas fa-folder icon"></i>選擇資料夾
-                                    </label>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-lock icon"></i>開始加密
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- 解密區域 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="mb-0"><i class="fas fa-unlock icon"></i>文件解密</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="decryptForm" enctype="multipart/form-data">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="encryptedFile" class="form-label">加密檔案 (.bin)：</label>
+                                            <input type="file" 
+                                                   class="form-control" 
+                                                   id="encryptedFile" 
+                                                   name="encrypted_file" 
+                                                   accept=".bin" 
+                                                   required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="keyFile" class="form-label">AES金鑰檔案 (.bin)：</label>
+                                            <input type="file" 
+                                                   class="form-control" 
+                                                   id="keyFile" 
+                                                   name="key_file" 
+                                                   accept=".bin" 
+                                                   required>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 加密文件預覽區域 -->
+                                    <div id="encryptedFilePreviewContainer" class="mt-3" style="display: none;">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-2"><i class="fas fa-eye icon"></i>加密文件預覽</h6>
+                                            <button type="button" id="toggleEncryptedPreview" class="preview-toggle-btn">
+                                                <i class="fas fa-eye"></i> 預覽加密視覺化
+                                            </button>
+                                        </div>
+                                        <div id="encryptedFilePreview" 
+                                             style="min-height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 5px; border: 2px dashed #e0e0e0;">
+                                            <div class="text-center">
+                                                <div class="text-muted">點擊上方按鈕預覽加密文件視覺化</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-success w-100 mt-3">
+                                        <i class="fas fa-unlock icon"></i>開始解密
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 右側面板：預覽和狀態 -->
+                    <div class="right-panel">
+                        <!-- 圖片預覽區域 -->
+                        <div id="imagePreviewContainer" class="image-preview-container" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="fas fa-images icon"></i>圖片預覽 (加密前)</h6>
+                                <button type="button" id="togglePreview" class="preview-toggle-btn">
+                                    <i class="fas fa-eye"></i> 顯示預覽
+                                </button>
+                            </div>
+                            <div id="imagePreviewGrid" class="image-preview-grid"></div>
+                        </div>
+                        
+                        <!-- 狀態和進度 -->
+                        <div class="status-container">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">處理狀態</h5>
+                                <div>
+                                    <span id="statusBadge" class="badge bg-secondary me-2">等待中</span>
+                                    <button onclick="clearFiles()" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash icon"></i>清理文件
+                                    </button>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label" id="uploadLabel">選擇要加密的文件（可多選）：</label>
-                                <div class="file-input-container">
-                                    <input type="file" 
-                                           class="file-input" 
-                                           id="encryptFiles" 
-                                           name="files" 
-                                           multiple 
-                                           required>
-                                    <label for="encryptFiles" class="file-input-label" id="uploadLabelText">
-                                        <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i><br>
-                                        點擊此處選擇文件或拖拽文件到此處
-                                    </label>
+                            
+                            <div id="progressContainer" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted">處理進度</small>
+                                    <small id="progressText" class="text-muted">0%</small>
                                 </div>
-                                <div id="encryptFileList" class="file-list"></div>
+                                <div class="progress mb-3">
+                                    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-lock icon"></i>開始加密
-                            </button>
-                        </form>
+                            
+                            <div id="statusMessage" class="text-muted mb-3">
+                                <i class="fas fa-info-circle icon"></i>等待操作...
+                            </div>
+                            
+                            <div id="processingSpinner" style="display: none;" class="text-center mb-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">處理中...</span>
+                                </div>
+                                <div class="mt-2 text-muted">正在處理，請稍候...</div>
+                            </div>
+                            
+                            <div id="resultFiles" class="result-files"></div>
+                            
+                            <div id="completionAlert" style="display: none;" class="alert alert-success alert-dismissible fade show mt-3">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>處理完成！</strong> 您可以下載生成的文件。
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- 解密區域 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="mb-0"><i class="fas fa-unlock icon"></i>文件解密</h3>
-                    </div>
-                    <div class="card-body">
-                        <form id="decryptForm" enctype="multipart/form-data">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="encryptedFile" class="form-label">加密檔案 (.bin)：</label>
-                                    <input type="file" 
-                                           class="form-control" 
-                                           id="encryptedFile" 
-                                           name="encrypted_file" 
-                                           accept=".bin" 
-                                           required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="keyFile" class="form-label">AES金鑰檔案 (.bin)：</label>
-                                    <input type="file" 
-                                           class="form-control" 
-                                           id="keyFile" 
-                                           name="key_file" 
-                                           accept=".bin" 
-                                           required>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-unlock icon"></i>開始解密
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                
-                <!-- 狀態和進度 -->
-                <div class="status-container">
+                <!-- 全寬圖片對比區域 -->
+                <div id="imageComparisonContainer" class="image-preview-container full-width" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">處理狀態</h5>
-                        <div>
-                            <span id="statusBadge" class="badge bg-secondary me-2">等待中</span>
-                            <button onclick="clearFiles()" class="btn btn-danger btn-sm">
-                                <i class="fas fa-trash icon"></i>清理文件
-                            </button>
-                        </div>
+                        <h5 class="mb-0"><i class="fas fa-exchange-alt icon"></i>加密前後對比</h5>
+                        <button type="button" id="hideComparison" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-times"></i> 隱藏
+                        </button>
                     </div>
-                    
-                    <div id="progressContainer" style="display: none;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-muted">處理進度</small>
-                            <small id="progressText" class="text-muted">0%</small>
-                        </div>
-                        <div class="progress mb-3">
-                            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    
-                    <div id="statusMessage" class="text-muted mb-3">
-                        <i class="fas fa-info-circle icon"></i>等待操作...
-                    </div>
-                    
-                    <div id="processingSpinner" style="display: none;" class="text-center mb-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">處理中...</span>
-                        </div>
-                        <div class="mt-2 text-muted">正在處理，請稍候...</div>
-                    </div>
-                    
-                    <div id="resultFiles" class="result-files"></div>
-                    
-                    <div id="completionAlert" style="display: none;" class="alert alert-success alert-dismissible fade show mt-3">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <strong>處理完成！</strong> 您可以下載生成的文件。
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                    <div id="comparisonContent" class="comparison-container"></div>
                 </div>
             </div>
         </div>
@@ -353,6 +553,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let statusCheckInterval;
+        let currentImagePreviews = []; // 儲存當前圖片預覽數據
         
         // 上傳方式切換
         document.querySelectorAll('input[name="uploadType"]').forEach(radio => {
@@ -376,6 +577,7 @@
                 // 清空已選擇的文件
                 fileInput.value = '';
                 document.getElementById('encryptFileList').innerHTML = '';
+                hideImagePreview(); // 隱藏圖片預覽
             });
         });
         
@@ -386,6 +588,8 @@
             
             if (e.target.files.length > 0) {
                 let totalSize = 0;
+                let hasImages = false;
+                
                 Array.from(e.target.files).forEach(file => {
                     const fileItem = document.createElement('div');
                     fileItem.className = 'file-item';
@@ -396,7 +600,12 @@
                         displayName = file.webkitRelativePath;
                     }
                     
-                    fileItem.innerHTML = `<i class="fas fa-file icon"></i>${displayName} (${formatFileSize(file.size)})`;
+                    // 檢查是否為圖片文件
+                    const isImage = isImageFile(displayName);
+                    if (isImage) hasImages = true;
+                    
+                    const icon = isImage ? 'fas fa-image' : 'fas fa-file';
+                    fileItem.innerHTML = `<i class="${icon} icon"></i>${displayName} (${formatFileSize(file.size)})`;
                     fileList.appendChild(fileItem);
                     totalSize += file.size;
                 });
@@ -409,6 +618,17 @@
                     totalItem.innerHTML = `<i class="fas fa-calculator icon"></i>總計: ${e.target.files.length} 個文件, ${formatFileSize(totalSize)}`;
                     fileList.appendChild(totalItem);
                 }
+                
+                // 如果有圖片文件，自動顯示預覽
+                if (hasImages) {
+                    showImagePreviewOption();
+                    // 自動載入圖片預覽
+                    loadImagePreviews();
+                } else {
+                    hideImagePreview();
+                }
+            } else {
+                hideImagePreview();
             }
         });
         
@@ -424,6 +644,14 @@
                 return;
             }
             
+            // 如果有圖片且還沒預覽，先載入預覽
+            if (currentImagePreviews.length === 0) {
+                const hasImages = Array.from(files).some(file => isImageFile(file.name));
+                if (hasImages) {
+                    loadImagePreviews();
+                }
+            }
+            
             // 添加所有文件到FormData
             Array.from(files).forEach(file => {
                 formData.append('files', file);
@@ -437,6 +665,10 @@
             .then(data => {
                 if (data.status === 'started') {
                     startStatusCheck();
+                    // 在加密開始時立即顯示對比區域準備
+                    if (currentImagePreviews.length > 0) {
+                        prepareComparisonArea();
+                    }
                 }
             })
             .catch(error => {
@@ -466,6 +698,112 @@
                 updateStatus('解密失敗：' + error.message);
             });
         });
+        
+        // 加密文件選擇事件
+        document.getElementById('encryptedFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.name.endsWith('.bin')) {
+                document.getElementById('encryptedFilePreviewContainer').style.display = 'block';
+                
+                // 重置預覽區域
+                const previewContainer = document.getElementById('encryptedFilePreview');
+                previewContainer.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-muted">點擊上方按鈕預覽加密文件視覺化</div>
+                    </div>
+                `;
+                
+                // 重置按鈕
+                const toggleBtn = document.getElementById('toggleEncryptedPreview');
+                toggleBtn.innerHTML = '<i class="fas fa-eye"></i> 預覽加密視覺化';
+                toggleBtn.onclick = function() { loadEncryptedFilePreview(file); };
+            } else {
+                document.getElementById('encryptedFilePreviewContainer').style.display = 'none';
+            }
+        });
+        
+        // 載入加密文件預覽
+        function loadEncryptedFilePreview(file) {
+            const previewContainer = document.getElementById('encryptedFilePreview');
+            const toggleBtn = document.getElementById('toggleEncryptedPreview');
+            
+            // 顯示載入狀態
+            previewContainer.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">載入中...</span>
+                    </div>
+                    <div class="text-muted">正在載入加密視覺化...</div>
+                </div>
+            `;
+            
+            toggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 載入中...';
+            toggleBtn.disabled = true;
+            
+            // 上傳文件到後端進行預覽
+            const formData = new FormData();
+            formData.append('encrypted_file', file);
+            
+            fetch('/preview_uploaded_encrypted', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    previewContainer.innerHTML = `
+                        <img src="${data.preview}" alt="加密視覺化" 
+                             style="max-width: 100%; max-height: 200px; border-radius: 5px; cursor: pointer;"
+                             onclick="showImageModal('${data.preview}', '${file.name} (加密視覺化)')">
+                    `;
+                    toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i> 隱藏預覽';
+                    toggleBtn.onclick = function() { hideEncryptedFilePreview(); };
+                } else {
+                    previewContainer.innerHTML = `
+                        <div class="text-danger text-center">
+                            <i class="fas fa-exclamation-triangle"></i><br>
+                            預覽失敗: ${data.error || '未知錯誤'}
+                        </div>
+                    `;
+                    toggleBtn.innerHTML = '<i class="fas fa-eye"></i> 預覽加密視覺化';
+                    toggleBtn.onclick = function() { loadEncryptedFilePreview(file); };
+                }
+            })
+            .catch(error => {
+                console.error('載入加密文件預覽失敗:', error);
+                previewContainer.innerHTML = `
+                    <div class="text-danger text-center">
+                        <i class="fas fa-exclamation-triangle"></i><br>
+                        載入失敗: ${error.message}
+                    </div>
+                `;
+                toggleBtn.innerHTML = '<i class="fas fa-eye"></i> 預覽加密視覺化';
+                toggleBtn.onclick = function() { loadEncryptedFilePreview(file); };
+            })
+            .finally(() => {
+                toggleBtn.disabled = false;
+            });
+        }
+        
+        // 隱藏加密文件預覽
+        function hideEncryptedFilePreview() {
+            const previewContainer = document.getElementById('encryptedFilePreview');
+            const toggleBtn = document.getElementById('toggleEncryptedPreview');
+            
+            previewContainer.innerHTML = `
+                <div class="text-center">
+                    <div class="text-muted">點擊上方按鈕預覽加密文件視覺化</div>
+                </div>
+            `;
+            
+            toggleBtn.innerHTML = '<i class="fas fa-eye"></i> 預覽加密視覺化';
+            toggleBtn.onclick = function() { 
+                const fileInput = document.getElementById('encryptedFile');
+                if (fileInput.files.length > 0) {
+                    loadEncryptedFilePreview(fileInput.files[0]);
+                }
+            };
+        }
         
         // 開始狀態檢查
         function startStatusCheck() {
@@ -502,6 +840,15 @@
                         
                         document.getElementById('completionAlert').style.display = 'block';
                         showResultFiles(data.result_files);
+                        
+                        // 只有在解密操作且有解密後的圖片時，才顯示解密對比
+                        // 通過檢查result_files中是否包含解密相關文件來判斷是否為解密操作
+                        const isDecryptOperation = data.result_files && 
+                            data.result_files.some(file => file.type === 'decrypted_zip');
+                        
+                        if (isDecryptOperation && data.decrypted_images && data.decrypted_images.length > 0) {
+                            showDecryptionComparison(data.decrypted_images, data.result_files);
+                        }
                         
                         // 隱藏進度條
                         setTimeout(() => {
@@ -551,7 +898,10 @@
             container.innerHTML = '';
             
             if (files && files.length > 0) {
-                files.forEach(file => {
+                // 過濾掉 decrypted_folder 類型的文件，只保留其他文件類型
+                const filteredFiles = files.filter(file => file.type !== 'decrypted_folder');
+                
+                filteredFiles.forEach(file => {
                     const fileDiv = document.createElement('div');
                     fileDiv.className = 'result-file';
                     
@@ -570,7 +920,95 @@
                     `;
                     container.appendChild(fileDiv);
                 });
+                
+                // 如果有圖片預覽數據且加密完成，自動載入加密視覺化
+                if (currentImagePreviews.length > 0) {
+                    const encryptedFile = filteredFiles.find(file => file.type === 'encrypted');
+                    if (encryptedFile) {
+                        // 更新對比區域標題並自動載入加密預覽
+                        setTimeout(() => {
+                            autoLoadEncryptedPreviews(encryptedFile.name);
+                        }, 500);
+                    }
+                }
             }
+        }
+        
+        // 自動載入所有加密預覽
+        function autoLoadEncryptedPreviews(encryptedFileName) {
+            console.log('開始自動載入加密預覽:', encryptedFileName);
+            console.log('當前圖片預覽:', currentImagePreviews);
+            
+            if (!currentImagePreviews || currentImagePreviews.length === 0) {
+                console.log('沒有圖片預覽，跳過加密預覽');
+                return;
+            }
+            
+            currentImagePreviews.forEach(image => {
+                const containerId = image.filename.replace(/[^a-zA-Z0-9]/g, '');
+                const container = document.getElementById(`encrypted-preview-${containerId}`);
+                
+                console.log('查找容器:', `encrypted-preview-${containerId}`, container);
+                
+                if (container) {
+                    // 更新標題
+                    const titleElement = container.parentElement.querySelector('.comparison-title');
+                    if (titleElement) {
+                        titleElement.innerHTML = `<i class="fas fa-lock icon"></i>加密後: ${encryptedFileName}`;
+                    }
+                    
+                    // 顯示加載狀態
+                    container.innerHTML = `
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-2" role="status">
+                                <span class="visually-hidden">載入中...</span>
+                            </div>
+                            <div class="text-muted">正在載入加密視覺化...</div>
+                        </div>
+                    `;
+                    
+                    // 載入加密預覽
+                    fetch(`/preview_encrypted/${encryptedFileName}`)
+                    .then(response => {
+                        console.log('加密預覽API響應狀態:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('加密預覽API回應:', data);
+                        if (data.status === 'success') {
+                            container.innerHTML = `
+                                <img src="${data.preview}" alt="加密視覺化" 
+                                     style="max-width: 100%; max-height: 300px; border-radius: 5px; cursor: pointer;"
+                                     onclick="showImageModal('${data.preview}', '${data.filename} (加密視覺化)')">
+                            `;
+                        } else {
+                            container.innerHTML = `
+                                <div class="text-danger text-center">
+                                    <i class="fas fa-exclamation-triangle"></i><br>
+                                    預覽失敗: ${data.error || '未知錯誤'}
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('載入加密預覽時發生錯誤:', error);
+                        container.innerHTML = `
+                            <div class="text-danger text-center">
+                                <i class="fas fa-exclamation-triangle"></i><br>
+                                載入失敗: ${error.message}
+                            </div>
+                        `;
+                    });
+                } else {
+                    console.warn('找不到預覽容器:', `encrypted-preview-${containerId}`);
+                    // 嘗試查找所有可能的容器
+                    const allContainers = document.querySelectorAll('[id^="encrypted-preview-"]');
+                    console.log('所有加密預覽容器:', allContainers);
+                }
+            });
         }
         
         // 清理文件
@@ -616,6 +1054,339 @@
             // 觸發change事件
             const event = new Event('change');
             fileInput.dispatchEvent(event);
+        });
+        
+        // ============================
+        // 圖片預覽相關函數
+        // ============================
+        
+        // 檢查是否為圖片文件
+        function isImageFile(filename) {
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.svg'];
+            return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+        }
+        
+        // 顯示圖片預覽選項
+        function showImagePreviewOption() {
+            document.getElementById('imagePreviewContainer').style.display = 'block';
+        }
+        
+        // 隱藏圖片預覽
+        function hideImagePreview() {
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            document.getElementById('imagePreviewGrid').innerHTML = '';
+            currentImagePreviews = [];
+        }
+        
+        // 自動載入圖片預覽
+        function loadImagePreviews() {
+            const files = document.getElementById('encryptFiles').files;
+            if (files.length === 0) return;
+            
+            const toggleBtn = document.getElementById('togglePreview');
+            toggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 加載中...';
+            toggleBtn.disabled = true;
+            
+            // 創建FormData並添加圖片文件
+            const formData = new FormData();
+            Array.from(files).forEach(file => {
+                if (isImageFile(file.name)) {
+                    formData.append('files', file);
+                }
+            });
+            
+            // 發送預覽請求
+            fetch('/preview_images', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentImagePreviews = data.images;
+                    displayImagePreviews(data.images);
+                    toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i> 隱藏預覽';
+                    toggleBtn.onclick = hideImagePreviewGrid;
+                } else {
+                    console.error('預覽失敗:', data.error);
+                    toggleBtn.innerHTML = '<i class="fas fa-eye"></i> 顯示預覽';
+                }
+            })
+            .catch(error => {
+                console.error('預覽錯誤:', error);
+                toggleBtn.innerHTML = '<i class="fas fa-eye"></i> 顯示預覽';
+            })
+            .finally(() => {
+                toggleBtn.disabled = false;
+            });
+        }
+        
+        // 準備對比區域
+        function prepareComparisonArea() {
+            if (!currentImagePreviews || currentImagePreviews.length === 0) return;
+            
+            const container = document.getElementById('imageComparisonContainer');
+            const content = document.getElementById('comparisonContent');
+            
+            content.innerHTML = '';
+            
+            // 為每個原始圖片創建對比區域
+            currentImagePreviews.forEach(image => {
+                const comparisonDiv = document.createElement('div');
+                comparisonDiv.className = 'comparison-container';
+                
+                comparisonDiv.innerHTML = `
+                    <div class="comparison-item">
+                        <div class="comparison-title before-title">
+                            <i class="fas fa-image icon"></i>加密前: ${image.filename}
+                        </div>
+                        <img src="${image.thumbnail}" alt="${image.filename}" 
+                             style="max-width: 100%; max-height: 300px; border-radius: 5px;"
+                             onclick="showImageModal('${image.thumbnail}', '${image.filename}')">
+                        <div class="image-preview-size">${formatFileSize(image.size)}</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title after-title">
+                            <i class="fas fa-lock icon"></i>加密後: 正在處理...
+                        </div>
+                        <div id="encrypted-preview-${image.filename.replace(/[^a-zA-Z0-9]/g, '')}" 
+                             style="min-height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 5px;">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">加密中...</span>
+                                </div>
+                                <div class="text-muted">正在加密處理中...</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                content.appendChild(comparisonDiv);
+            });
+            
+            container.style.display = 'block';
+        }
+        
+        // 預覽按鈕點擊事件（保持兼容性）
+        document.getElementById('togglePreview').addEventListener('click', function() {
+            if (this.innerHTML.includes('隱藏預覽')) {
+                hideImagePreviewGrid();
+            } else {
+                loadImagePreviews();
+            }
+        });
+        
+        // 隱藏預覽網格
+        function hideImagePreviewGrid() {
+            document.getElementById('imagePreviewGrid').innerHTML = '';
+            const btn = document.getElementById('togglePreview');
+            btn.innerHTML = '<i class="fas fa-eye"></i> 顯示預覽';
+            btn.onclick = null;
+            btn.addEventListener('click', arguments.callee.caller.caller);
+        }
+        
+        // 顯示圖片預覽
+        function displayImagePreviews(images) {
+            const grid = document.getElementById('imagePreviewGrid');
+            grid.innerHTML = '';
+            
+            images.forEach(image => {
+                const item = document.createElement('div');
+                item.className = 'image-preview-item';
+                
+                item.innerHTML = `
+                    <img src="${image.thumbnail}" alt="${image.filename}" onclick="showImageModal('${image.thumbnail}', '${image.filename}')">
+                    <div class="image-preview-filename">${image.filename}</div>
+                    <div class="image-preview-size">${formatFileSize(image.size)}</div>
+                `;
+                
+                grid.appendChild(item);
+            });
+        }
+        
+        // 顯示圖片模態框（放大查看）
+        function showImageModal(src, filename) {
+            // 創建模態框
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); z-index: 9999; display: flex;
+                justify-content: center; align-items: center; cursor: pointer;
+            `;
+            
+            modal.innerHTML = `
+                <div style="max-width: 90%; max-height: 90%; text-align: center;">
+                    <img src="${src}" style="max-width: 100%; max-height: 100%; border-radius: 10px;" alt="${filename}">
+                    <div style="color: white; margin-top: 10px; font-size: 1.1em;">${filename}</div>
+                    <div style="color: #ccc; margin-top: 5px; font-size: 0.9em;">點擊任意處關閉</div>
+                </div>
+            `;
+            
+            modal.onclick = () => modal.remove();
+            document.body.appendChild(modal);
+        }
+        
+        // 顯示解密前後對比
+        function showDecryptionComparison(decryptedImages, resultFiles) {
+            if (!decryptedImages || decryptedImages.length === 0) return;
+            
+            const container = document.getElementById('imageComparisonContainer');
+            const content = document.getElementById('comparisonContent');
+            
+            content.innerHTML = '';
+            
+            // 從狀態中獲取原始加密文件名
+            let encryptedFileName = null;
+            
+            // 從全局狀態獲取加密文件名
+            fetch('/status')
+            .then(response => response.json())
+            .then(statusData => {
+                encryptedFileName = statusData.source_encrypted_file;
+                console.log('從狀態獲取的加密文件名:', encryptedFileName);
+                
+                // 為每個解密後的圖片創建對比
+                decryptedImages.forEach(image => {
+                    const comparisonDiv = document.createElement('div');
+                    comparisonDiv.className = 'comparison-container';
+                    
+                    comparisonDiv.innerHTML = `
+                        <div class="comparison-item">
+                            <div class="comparison-title before-title">
+                                <i class="fas fa-lock icon"></i>解密前: 加密視覺化
+                            </div>
+                            <div id="encrypted-visual-${image.filename.replace(/[^a-zA-Z0-9]/g, '')}" 
+                                 style="min-height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 5px;">
+                                <div class="text-center">
+                                    <div class="spinner-border text-danger mb-3" role="status">
+                                        <span class="visually-hidden">載入加密視覺化...</span>
+                                    </div>
+                                    <div class="text-muted">正在載入加密視覺化...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="comparison-item">
+                            <div class="comparison-title after-title">
+                                <i class="fas fa-unlock icon"></i>解密後: ${image.filename}
+                            </div>
+                            <img src="${image.thumbnail}" alt="${image.filename}" 
+                                 style="max-width: 100%; max-height: 300px; border-radius: 5px; cursor: pointer;"
+                                 onclick="showImageModal('${image.thumbnail}', '${image.filename} (解密後)')">
+                            <div class="image-preview-size mt-2">${formatFileSize(image.size)}</div>
+                        </div>
+                    `;
+                    
+                    content.appendChild(comparisonDiv);
+                    
+                    // 自動載入加密視覺化
+                    if (encryptedFileName) {
+                        setTimeout(() => {
+                            loadEncryptedVisualizationForDecryption(encryptedFileName, image.filename);
+                        }, 500);
+                    }
+                });
+                
+                // 更新標題
+                const titleElement = container.querySelector('h5');
+                if (titleElement) {
+                    titleElement.innerHTML = '<i class="fas fa-exchange-alt icon"></i>解密前後對比';
+                }
+                
+                container.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('獲取狀態失敗:', error);
+                // 即使獲取狀態失敗，也顯示解密後的圖片
+                showDecryptedImagesOnly(decryptedImages);
+            });
+        }
+        
+        // 僅顯示解密後的圖片（當無法獲取加密視覺化時的備選方案）
+        function showDecryptedImagesOnly(decryptedImages) {
+            const container = document.getElementById('imageComparisonContainer');
+            const content = document.getElementById('comparisonContent');
+            
+            content.innerHTML = '';
+            
+            decryptedImages.forEach(image => {
+                const imageDiv = document.createElement('div');
+                imageDiv.className = 'comparison-item';
+                imageDiv.style.margin = '0 auto';
+                imageDiv.style.maxWidth = '600px';
+                
+                imageDiv.innerHTML = `
+                    <div class="comparison-title after-title">
+                        <i class="fas fa-unlock icon"></i>解密完成: ${image.filename}
+                    </div>
+                    <img src="${image.thumbnail}" alt="${image.filename}" 
+                         style="max-width: 100%; max-height: 400px; border-radius: 5px; cursor: pointer;"
+                         onclick="showImageModal('${image.thumbnail}', '${image.filename} (解密後)')">
+                    <div class="image-preview-size mt-2">${formatFileSize(image.size)}</div>
+                `;
+                
+                content.appendChild(imageDiv);
+            });
+            
+            // 更新標題
+            const titleElement = container.querySelector('h5');
+            if (titleElement) {
+                titleElement.innerHTML = '<i class="fas fa-unlock icon"></i>解密後圖片';
+            }
+            
+            container.style.display = 'block';
+        }
+        
+        // 為解密對比載入加密視覺化
+        function loadEncryptedVisualizationForDecryption(encryptedFileName, originalFileName) {
+            const containerId = originalFileName.replace(/[^a-zA-Z0-9]/g, '');
+            const container = document.getElementById(`encrypted-visual-${containerId}`);
+            
+            if (!container) {
+                console.warn('找不到加密視覺化容器:', `encrypted-visual-${containerId}`);
+                return;
+            }
+            
+            console.log('載入加密視覺化:', encryptedFileName, '對應原始文件:', originalFileName);
+            
+            fetch(`/preview_encrypted/${encryptedFileName}`)
+            .then(response => {
+                console.log('加密視覺化API響應狀態:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('加密視覺化API回應:', data);
+                if (data.status === 'success') {
+                    container.innerHTML = `
+                        <img src="${data.preview}" alt="加密視覺化" 
+                             style="max-width: 100%; max-height: 300px; border-radius: 5px; cursor: pointer;"
+                             onclick="showImageModal('${data.preview}', '${data.filename} (加密視覺化)')">
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-danger text-center">
+                            <i class="fas fa-exclamation-triangle"></i><br>
+                            視覺化載入失敗: ${data.error || '未知錯誤'}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('載入加密視覺化時發生錯誤:', error);
+                container.innerHTML = `
+                    <div class="text-danger text-center">
+                        <i class="fas fa-exclamation-triangle"></i><br>
+                        載入失敗: ${error.message}
+                    </div>
+                `;
+            });
+        }
+        
+        // 隱藏對比
+        document.getElementById('hideComparison').addEventListener('click', function() {
+            document.getElementById('imageComparisonContainer').style.display = 'none';
         });
     </script>
 </body>

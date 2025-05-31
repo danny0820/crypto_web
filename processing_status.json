@@ -4,13 +4,13 @@
   "progress": 100,
   "result_files": [
     {
-      "name": "folder_encrypted_20250530_163928.bin",
-      "path": "processed\\folder_encrypted_20250530_163928.bin",
+      "name": "folder_encrypted_20250531_115337.bin",
+      "path": "processed\\folder_encrypted_20250531_115337.bin",
       "type": "encrypted"
     },
     {
-      "name": "aes_key_encrypted_20250530_163928.bin",
-      "path": "processed\\aes_key_encrypted_20250530_163928.bin",
+      "name": "aes_key_encrypted_20250531_115337.bin",
+      "path": "processed\\aes_key_encrypted_20250531_115337.bin",
       "type": "key"
     },
     {
@@ -23,5 +23,7 @@
       "path": "processed\\public_key.pem",
       "type": "public_key"
     }
-  ]
+  ],
+  "decrypted_images": [],
+  "source_encrypted_file": "folder_encrypted_20250531_114939.bin"
 }
