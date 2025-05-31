@@ -42,6 +42,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa, padding  # RSA加密
 from cryptography.hazmat.primitives import serialization, hashes     # 密鑰序列化和哈希
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM      # AES-GCM加密
 
+# 視頻處理相關庫
+import cv2       # OpenCV，用於視頻處理
+import imageio   # 圖像和視頻I/O庫
+
 # ============================
 # Flask 應用程序配置
 # ============================
@@ -94,7 +98,8 @@ def load_status():
         'status_message': '',      # 當前狀態消息
         'progress': 0,             # 處理進度 (0-100)
         'result_files': [],         # 結果文件列表
-        'decrypted_images': []     # 新增：存儲解密後的圖片預覽
+        'decrypted_images': [],     # 新增：存儲解密後的圖片預覽
+        'decrypted_videos': []     # 新增：存儲解密後的視頻預覽
     }
 
 def save_status(status):
@@ -545,6 +550,7 @@ def decrypt_files_process(encrypted_file_path, key_file_path):
         processing_status['is_processing'] = True
         processing_status['result_files'] = []
         processing_status['decrypted_images'] = []  # 新增：存儲解密後的圖片預覽
+        processing_status['decrypted_videos'] = []  # 新增：存儲解密後的視頻預覽
         
         # 將加密文件複製到 processed 目錄以便預覽
         original_filename = os.path.basename(encrypted_file_path)
@@ -605,38 +611,64 @@ def decrypt_files_process(encrypted_file_path, key_file_path):
         unzip_folder(decrypted_zip, temp_extracted_folder)
         
         decrypted_images = []
+        decrypted_videos = []
         
-        # 遍歷解壓後的文件，找出圖片文件
+        # 遍歷解壓後的文件，找出圖片和視頻文件
         for root, dirs, files in os.walk(temp_extracted_folder):
             for file in files:
-                if is_image_file(file):
-                    try:
-                        file_path = os.path.join(root, file)
-                        relative_path = os.path.relpath(file_path, temp_extracted_folder)
-                        
-                        # 讀取圖片文件
-                        with open(file_path, 'rb') as f:
-                            image_data = f.read()
-                        
-                        # 生成縮略圖
-                        thumbnail = resize_image_for_preview(image_data)
+                try:
+                    file_path = os.path.join(root, file)
+                    relative_path = os.path.relpath(file_path, temp_extracted_folder)
+                    
+                    # 讀取文件數據
+                    with open(file_path, 'rb') as f:
+                        file_data = f.read()
+                    
+                    if is_image_file(file):
+                        # 處理圖片文件
+                        thumbnail = resize_image_for_preview(file_data)
                         
                         if thumbnail:
                             decrypted_images.append({
                                 'filename': relative_path,
-                                'size': len(image_data),
-                                'thumbnail': thumbnail
+                                'size': len(file_data),
+                                'thumbnail': thumbnail,
+                                'type': 'image'
                             })
+                    
+                    elif is_video_file(file):
+                        # 處理視頻文件
+                        thumbnail = generate_video_thumbnail(file_data)
+                        video_info = get_video_info(file_data)
+                        
+                        if thumbnail:
+                            video_preview = {
+                                'filename': relative_path,
+                                'size': len(file_data),
+                                'thumbnail': thumbnail,
+                                'type': 'video'
+                            }
                             
-                    except Exception as e:
-                        print(f"處理解密圖片 {file} 失敗: {e}")
-                        continue
+                            # 添加視頻信息（如果可用）
+                            if video_info:
+                                video_preview.update({
+                                    'duration': video_info['duration'],
+                                    'resolution': f"{video_info['width']}x{video_info['height']}",
+                                    'fps': video_info['fps']
+                                })
+                            
+                            decrypted_videos.append(video_preview)
+                            
+                except Exception as e:
+                    print(f"處理解密文件 {file} 失敗: {e}")
+                    continue
         
         # 設置結果文件列表（只包含ZIP文件）
         processing_status['result_files'] = [
             {'name': f'decrypted_folder_{timestamp}.zip', 'path': decrypted_zip, 'type': 'decrypted_zip'}
         ]
-        processing_status['decrypted_images'] = decrypted_images  # 添加解密後的圖片預覽
+        processing_status['decrypted_images'] = decrypted_images  # 解密後的圖片預覽
+        processing_status['decrypted_videos'] = decrypted_videos  # 新增：解密後的視頻預覽
         save_status(processing_status)  # 保存狀態
 
         update_status("解密與還原完成！", 100)
@@ -673,6 +705,19 @@ def is_image_file(filename):
     """
     image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.svg'}
     return any(filename.lower().endswith(ext) for ext in image_extensions)
+
+def is_video_file(filename):
+    """
+    檢查文件是否為視頻類型
+    
+    Args:
+        filename (str): 文件名
+        
+    Returns:
+        bool: 是否為視頻文件
+    """
+    video_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv', '.wmv', '.m4v', '.3gp', '.ogv', '.ts', '.mts', '.m2ts'}
+    return any(filename.lower().endswith(ext) for ext in video_extensions)
 
 def create_encrypted_visualization(file_path, max_width=300, max_height=300):
     """
@@ -774,6 +819,158 @@ def resize_image_for_preview(image_data, max_width=300, max_height=300):
         
     except Exception as e:
         print(f"圖片調整大小失敗: {e}")
+        return None
+
+def generate_video_thumbnail(video_data, max_width=300, max_height=300, frame_time=2.0):
+    """
+    為視頻生成縮略圖
+    
+    Args:
+        video_data (bytes): 視頻數據
+        max_width (int): 最大寬度
+        max_height (int): 最大高度
+        frame_time (float): 提取幀的時間位置（秒）
+        
+    Returns:
+        str: Base64編碼的縮略圖數據
+    """
+    try:
+        # 創建臨時文件來存儲視頻數據
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+            temp_file.write(video_data)
+            temp_video_path = temp_file.name
+        
+        try:
+            # 使用OpenCV讀取視頻
+            cap = cv2.VideoCapture(temp_video_path)
+            
+            if not cap.isOpened():
+                print("無法打開視頻文件")
+                return None
+            
+            # 獲取視頻信息
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            duration = total_frames / fps if fps > 0 else 0
+            
+            # 計算要提取的幀位置
+            if duration > 0:
+                # 如果視頻時長超過指定時間，則在指定時間提取幀
+                # 否則在視頻中間位置提取幀
+                target_time = min(frame_time, duration / 2)
+                target_frame = int(target_time * fps)
+            else:
+                target_frame = 0
+            
+            # 設置到目標幀
+            cap.set(cv2.CAP_PROP_POS_FRAMES, target_frame)
+            
+            # 讀取幀
+            ret, frame = cap.read()
+            cap.release()
+            
+            if not ret or frame is None:
+                print("無法讀取視頻幀")
+                return None
+            
+            # 確保幀數據是有效的
+            if frame.size == 0:
+                print("讀取到空幀")
+                return None
+            
+            # 轉換BGR到RGB（OpenCV使用BGR，PIL使用RGB）
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            
+            # 轉換為PIL圖像
+            img = Image.fromarray(frame_rgb)
+            
+            # 確保圖像模式正確
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # 計算新的尺寸，保持寬高比
+            width, height = img.size
+            aspect_ratio = width / height
+            
+            if width > height:
+                new_width = min(max_width, width)
+                new_height = int(new_width / aspect_ratio)
+            else:
+                new_height = min(max_height, height)
+                new_width = int(new_height * aspect_ratio)
+            
+            # 確保尺寸有效
+            new_width = max(1, new_width)
+            new_height = max(1, new_height)
+            
+            # 調整大小
+            img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # 轉換為base64
+            buffer = io.BytesIO()
+            img_resized.save(buffer, format='PNG', quality=95)
+            img_base64 = base64.b64encode(buffer.getvalue()).decode()
+            
+            return f"data:image/png;base64,{img_base64}"
+            
+        finally:
+            # 清理臨時文件
+            if os.path.exists(temp_video_path):
+                os.remove(temp_video_path)
+        
+    except Exception as e:
+        print(f"生成視頻縮略圖失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def get_video_info(video_data):
+    """
+    獲取視頻基本信息
+    
+    Args:
+        video_data (bytes): 視頻數據
+        
+    Returns:
+        dict: 視頻信息字典
+    """
+    try:
+        # 創建臨時文件來存儲視頻數據
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+            temp_file.write(video_data)
+            temp_video_path = temp_file.name
+        
+        try:
+            # 使用OpenCV讀取視頻信息
+            cap = cv2.VideoCapture(temp_video_path)
+            
+            if not cap.isOpened():
+                return None
+            
+            # 獲取視頻信息
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            duration = total_frames / fps if fps > 0 else 0
+            
+            cap.release()
+            
+            return {
+                'duration': round(duration, 2),
+                'fps': round(fps, 2),
+                'width': width,
+                'height': height,
+                'total_frames': total_frames
+            }
+            
+        finally:
+            # 清理臨時文件
+            if os.path.exists(temp_video_path):
+                os.remove(temp_video_path)
+        
+    except Exception as e:
+        print(f"獲取視頻信息失敗: {e}")
         return None
 
 # ============================
@@ -980,6 +1177,130 @@ def preview_images():
         
     except Exception as e:
         return jsonify({'error': f'預覽失敗: {str(e)}'}), 500
+
+@app.route('/preview_videos', methods=['POST'])
+def preview_videos():
+    """
+    視頻預覽路由
+    
+    處理上傳的文件，提取其中的視頻文件並返回預覽數據（縮略圖和信息）
+    """
+    try:
+        if 'files' not in request.files:
+            return jsonify({'error': '沒有選擇文件'}), 400
+        
+        files = request.files.getlist('files')
+        video_previews = []
+        
+        for file in files:
+            if file.filename and is_video_file(file.filename):
+                try:
+                    # 重置文件指針
+                    file.seek(0)
+                    file_data = file.read()
+                    
+                    # 生成視頻縮略圖
+                    thumbnail = generate_video_thumbnail(file_data)
+                    
+                    # 獲取視頻信息
+                    video_info = get_video_info(file_data)
+                    
+                    if thumbnail:
+                        preview_data = {
+                            'filename': file.filename,
+                            'size': len(file_data),
+                            'thumbnail': thumbnail,
+                            'type': 'video'
+                        }
+                        
+                        # 添加視頻信息（如果可用）
+                        if video_info:
+                            preview_data.update({
+                                'duration': video_info['duration'],
+                                'resolution': f"{video_info['width']}x{video_info['height']}",
+                                'fps': video_info['fps']
+                            })
+                        
+                        video_previews.append(preview_data)
+                        
+                except Exception as e:
+                    print(f"處理視頻 {file.filename} 失敗: {e}")
+                    continue
+        
+        return jsonify({
+            'status': 'success',
+            'videos': video_previews
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'視頻預覽失敗: {str(e)}'}), 500
+
+@app.route('/preview_media', methods=['POST'])
+def preview_media():
+    """
+    媒體文件預覽路由（統一處理圖片和視頻）
+    
+    處理上傳的文件，提取其中的圖片和視頻文件並返回預覽數據
+    """
+    try:
+        if 'files' not in request.files:
+            return jsonify({'error': '沒有選擇文件'}), 400
+        
+        files = request.files.getlist('files')
+        media_previews = []
+        
+        for file in files:
+            if file.filename:
+                try:
+                    # 重置文件指針
+                    file.seek(0)
+                    file_data = file.read()
+                    
+                    if is_image_file(file.filename):
+                        # 處理圖片
+                        thumbnail = resize_image_for_preview(file_data)
+                        if thumbnail:
+                            media_previews.append({
+                                'filename': file.filename,
+                                'size': len(file_data),
+                                'thumbnail': thumbnail,
+                                'type': 'image'
+                            })
+                    
+                    elif is_video_file(file.filename):
+                        # 處理視頻
+                        thumbnail = generate_video_thumbnail(file_data)
+                        video_info = get_video_info(file_data)
+                        
+                        if thumbnail:
+                            preview_data = {
+                                'filename': file.filename,
+                                'size': len(file_data),
+                                'thumbnail': thumbnail,
+                                'type': 'video'
+                            }
+                            
+                            # 添加視頻信息（如果可用）
+                            if video_info:
+                                preview_data.update({
+                                    'duration': video_info['duration'],
+                                    'resolution': f"{video_info['width']}x{video_info['height']}",
+                                    'fps': video_info['fps']
+                                })
+                            
+                            media_previews.append(preview_data)
+                        
+                except Exception as e:
+                    print(f"處理媒體文件 {file.filename} 失敗: {e}")
+                    continue
+        
+        return jsonify({
+            'status': 'success',
+            'media': media_previews
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'媒體預覽失敗: {str(e)}'}), 500
 
 @app.route('/preview_encrypted/<filename>')
 def preview_encrypted(filename):

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>資料夾加密/解密工具</title>
+    <title>資料加密/解密工具</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -207,16 +207,16 @@
         
         /* 新增圖片預覽樣式 */
         .image-preview-container {
-            margin-top: 20px;
-            padding: 20px;
-            border: 2px dashed #e0e0e0;
-            border-radius: 10px;
             background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
         }
         
         .image-preview-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 15px;
             margin-top: 15px;
         }
@@ -224,34 +224,143 @@
         .image-preview-item {
             background: white;
             border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
+            text-align: center;
         }
         
         .image-preview-item:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
         }
         
         .image-preview-item img {
             max-width: 100%;
-            max-height: 120px;
+            max-height: 200px;
             border-radius: 5px;
-            object-fit: contain;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            object-fit: cover;
+        }
+        
+        .image-preview-item img:hover {
+            transform: scale(1.05);
         }
         
         .image-preview-filename {
-            font-size: 0.8em;
-            color: #666;
-            margin-top: 5px;
+            font-weight: 600;
+            margin-top: 10px;
+            color: #333;
+            font-size: 0.9em;
             word-break: break-all;
         }
         
         .image-preview-size {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        
+        /* 視頻預覽樣式 */
+        .video-preview-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            text-align: center;
+            position: relative;
+        }
+        
+        .video-preview-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .video-thumbnail {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .video-thumbnail img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            object-fit: cover;
+        }
+        
+        .video-thumbnail:hover img {
+            transform: scale(1.05);
+        }
+        
+        .video-play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            pointer-events: none;
+        }
+        
+        .video-info {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .video-duration {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
             font-size: 0.7em;
-            color: #999;
-            margin-top: 2px;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+        }
+        
+        /* 媒體預覽網格（統一圖片和視頻） */
+        .media-preview-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .media-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .media-type-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: none; /* 隱藏媒體類型標籤 */
+        }
+        
+        .media-type-badge.video {
+            background: rgba(220, 53, 69, 0.9);
+            display: none; /* 隱藏視頻類型標籤 */
         }
         
         /* 對比區域優化 */
@@ -361,7 +470,7 @@
     <div class="container">
         <div class="main-container">
             <div class="header">
-                <h1><i class="fas fa-shield-alt icon"></i>資料夾加密/解密工具</h1>
+                <h1><i class="fas fa-shield-alt icon"></i>資料加密/解密工具</h1>
                 <p class="mb-0">使用AES-GCM和RSA混合加密技術保護您的資料</p>
             </div>
             
@@ -481,15 +590,15 @@
                     
                     <!-- 右側面板：預覽和狀態 -->
                     <div class="right-panel">
-                        <!-- 圖片預覽區域 -->
-                        <div id="imagePreviewContainer" class="image-preview-container" style="display: none;">
+                        <!-- 媒體預覽區域（圖片和視頻） -->
+                        <div id="mediaPreviewContainer" class="media-preview-container" style="display: none;">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0"><i class="fas fa-images icon"></i>圖片預覽 (加密前)</h6>
+                                <h6 class="mb-0"><i class="fas fa-photo-video icon"></i>媒體預覽 (加密前)</h6>
                                 <button type="button" id="togglePreview" class="preview-toggle-btn">
                                     <i class="fas fa-eye"></i> 顯示預覽
                                 </button>
                             </div>
-                            <div id="imagePreviewGrid" class="image-preview-grid"></div>
+                            <div id="mediaPreviewGrid" class="media-preview-grid"></div>
                         </div>
                         
                         <!-- 狀態和進度 -->
@@ -554,6 +663,7 @@
     <script>
         let statusCheckInterval;
         let currentImagePreviews = []; // 儲存當前圖片預覽數據
+        let currentMediaPreviews = []; // 儲存當前媒體預覽數據（圖片和視頻）
         
         // 上傳方式切換
         document.querySelectorAll('input[name="uploadType"]').forEach(radio => {
@@ -588,7 +698,9 @@
             
             if (e.target.files.length > 0) {
                 let totalSize = 0;
-                let hasImages = false;
+                let hasMedia = false;
+                let imageCount = 0;
+                let videoCount = 0;
                 
                 Array.from(e.target.files).forEach(file => {
                     const fileItem = document.createElement('div');
@@ -600,35 +712,55 @@
                         displayName = file.webkitRelativePath;
                     }
                     
-                    // 檢查是否為圖片文件
+                    // 檢查文件類型
                     const isImage = isImageFile(displayName);
-                    if (isImage) hasImages = true;
+                    const isVideo = isVideoFile(displayName);
                     
-                    const icon = isImage ? 'fas fa-image' : 'fas fa-file';
+                    if (isImage) {
+                        hasMedia = true;
+                        imageCount++;
+                    } else if (isVideo) {
+                        hasMedia = true;
+                        videoCount++;
+                    }
+                    
+                    let icon = 'fas fa-file';
+                    if (isImage) icon = 'fas fa-image';
+                    else if (isVideo) icon = 'fas fa-video';
+                    
                     fileItem.innerHTML = `<i class="${icon} icon"></i>${displayName} (${formatFileSize(file.size)})`;
                     fileList.appendChild(fileItem);
                     totalSize += file.size;
                 });
                 
-                // 顯示總大小
+                // 顯示總大小和媒體統計
                 if (e.target.files.length > 1) {
                     const totalItem = document.createElement('div');
                     totalItem.className = 'file-item';
                     totalItem.style.fontWeight = 'bold';
-                    totalItem.innerHTML = `<i class="fas fa-calculator icon"></i>總計: ${e.target.files.length} 個文件, ${formatFileSize(totalSize)}`;
+                    
+                    let mediaInfo = '';
+                    if (imageCount > 0 || videoCount > 0) {
+                        const mediaParts = [];
+                        if (imageCount > 0) mediaParts.push(`${imageCount} 圖片`);
+                        if (videoCount > 0) mediaParts.push(`${videoCount} 視頻`);
+                        mediaInfo = ` (${mediaParts.join(', ')})`;
+                    }
+                    
+                    totalItem.innerHTML = `<i class="fas fa-calculator icon"></i>總計: ${e.target.files.length} 個文件${mediaInfo}, ${formatFileSize(totalSize)}`;
                     fileList.appendChild(totalItem);
                 }
                 
-                // 如果有圖片文件，自動顯示預覽
-                if (hasImages) {
-                    showImagePreviewOption();
-                    // 自動載入圖片預覽
-                    loadImagePreviews();
+                // 如果有媒體文件，自動顯示預覽
+                if (hasMedia) {
+                    showMediaPreviewOption();
+                    // 自動載入媒體預覽
+                    loadMediaPreviews();
                 } else {
-                    hideImagePreview();
+                    hideMediaPreview();
                 }
             } else {
-                hideImagePreview();
+                hideMediaPreview();
             }
         });
         
@@ -645,10 +777,10 @@
             }
             
             // 如果有圖片且還沒預覽，先載入預覽
-            if (currentImagePreviews.length === 0) {
-                const hasImages = Array.from(files).some(file => isImageFile(file.name));
-                if (hasImages) {
-                    loadImagePreviews();
+            if (currentImagePreviews.length === 0 && currentMediaPreviews.length === 0) {
+                const hasMedia = Array.from(files).some(file => isMediaFile(file.name));
+                if (hasMedia) {
+                    loadMediaPreviews();
                 }
             }
             
@@ -666,7 +798,7 @@
                 if (data.status === 'started') {
                     startStatusCheck();
                     // 在加密開始時立即顯示對比區域準備
-                    if (currentImagePreviews.length > 0) {
+                    if (currentMediaPreviews.length > 0 || currentImagePreviews.length > 0) {
                         prepareComparisonArea();
                     }
                 }
@@ -846,8 +978,17 @@
                         const isDecryptOperation = data.result_files && 
                             data.result_files.some(file => file.type === 'decrypted_zip');
                         
-                        if (isDecryptOperation && data.decrypted_images && data.decrypted_images.length > 0) {
-                            showDecryptionComparison(data.decrypted_images, data.result_files);
+                        if (isDecryptOperation) {
+                            const hasDecryptedImages = data.decrypted_images && data.decrypted_images.length > 0;
+                            const hasDecryptedVideos = data.decrypted_videos && data.decrypted_videos.length > 0;
+                            
+                            if (hasDecryptedImages || hasDecryptedVideos) {
+                                showDecryptionComparison(
+                                    data.decrypted_images || [], 
+                                    data.result_files,
+                                    data.decrypted_videos || []
+                                );
+                            }
                         }
                         
                         // 隱藏進度條
@@ -921,10 +1062,12 @@
                     container.appendChild(fileDiv);
                 });
                 
-                // 如果有圖片預覽數據且加密完成，自動載入加密視覺化
-                if (currentImagePreviews.length > 0) {
+                // 如果有媒體預覽數據且加密完成，自動載入加密視覺化
+                // 优先检查currentMediaPreviews，然后检查currentImagePreviews（向后兼容）
+                if (currentMediaPreviews.length > 0 || currentImagePreviews.length > 0) {
                     const encryptedFile = filteredFiles.find(file => file.type === 'encrypted');
                     if (encryptedFile) {
+                        console.log('找到加密文件，準備載入加密預覽:', encryptedFile.name);
                         // 更新對比區域標題並自動載入加密預覽
                         setTimeout(() => {
                             autoLoadEncryptedPreviews(encryptedFile.name);
@@ -937,15 +1080,19 @@
         // 自動載入所有加密預覽
         function autoLoadEncryptedPreviews(encryptedFileName) {
             console.log('開始自動載入加密預覽:', encryptedFileName);
+            console.log('當前媒體預覽:', currentMediaPreviews);
             console.log('當前圖片預覽:', currentImagePreviews);
             
-            if (!currentImagePreviews || currentImagePreviews.length === 0) {
-                console.log('沒有圖片預覽，跳過加密預覽');
+            // 优先使用currentMediaPreviews，如果为空则使用currentImagePreviews（向后兼容）
+            const previewsToProcess = currentMediaPreviews.length > 0 ? currentMediaPreviews : currentImagePreviews;
+            
+            if (!previewsToProcess || previewsToProcess.length === 0) {
+                console.log('沒有媒體預覽，跳過加密預覽');
                 return;
             }
             
-            currentImagePreviews.forEach(image => {
-                const containerId = image.filename.replace(/[^a-zA-Z0-9]/g, '');
+            previewsToProcess.forEach(item => {
+                const containerId = item.filename.replace(/[^a-zA-Z0-9]/g, '');
                 const container = document.getElementById(`encrypted-preview-${containerId}`);
                 
                 console.log('查找容器:', `encrypted-preview-${containerId}`, container);
@@ -1065,48 +1212,86 @@
             const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.svg'];
             return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
         }
+
+        // 檢查是否為視頻文件
+        function isVideoFile(filename) {
+            const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv', '.wmv', '.m4v', '.3gp', '.ogv', '.ts', '.mts', '.m2ts'];
+            return videoExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+        }
+
+        // 檢查是否為媒體文件（圖片或視頻）
+        function isMediaFile(filename) {
+            return isImageFile(filename) || isVideoFile(filename);
+        }
+
+        // 格式化時間（秒轉為 mm:ss）
+        function formatDuration(seconds) {
+            if (!seconds || seconds <= 0) return '--:--';
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
         
         // 顯示圖片預覽選項
         function showImagePreviewOption() {
-            document.getElementById('imagePreviewContainer').style.display = 'block';
+            document.getElementById('mediaPreviewContainer').style.display = 'block';
+        }
+        
+        // 顯示媒體預覽選項（圖片和視頻）
+        function showMediaPreviewOption() {
+            document.getElementById('mediaPreviewContainer').style.display = 'block';
         }
         
         // 隱藏圖片預覽
         function hideImagePreview() {
-            document.getElementById('imagePreviewContainer').style.display = 'none';
-            document.getElementById('imagePreviewGrid').innerHTML = '';
+            document.getElementById('mediaPreviewContainer').style.display = 'none';
+            document.getElementById('mediaPreviewGrid').innerHTML = '';
             currentImagePreviews = [];
         }
         
-        // 自動載入圖片預覽
+        // 隱藏媒體預覽
+        function hideMediaPreview() {
+            document.getElementById('mediaPreviewContainer').style.display = 'none';
+            document.getElementById('mediaPreviewGrid').innerHTML = '';
+            currentImagePreviews = [];
+            currentMediaPreviews = [];
+        }
+
+        // 載入圖片預覽（保持兼容性）
         function loadImagePreviews() {
+            loadMediaPreviews();
+        }
+        
+        // 載入媒體預覽（圖片和視頻）
+        function loadMediaPreviews() {
             const files = document.getElementById('encryptFiles').files;
             if (files.length === 0) return;
             
             const toggleBtn = document.getElementById('togglePreview');
-            toggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 加載中...';
             toggleBtn.disabled = true;
+            toggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 載入中...';
             
-            // 創建FormData並添加圖片文件
+            // 創建FormData並添加媒體文件
             const formData = new FormData();
             Array.from(files).forEach(file => {
-                if (isImageFile(file.name)) {
+                if (isMediaFile(file.name)) {
                     formData.append('files', file);
                 }
             });
             
             // 發送預覽請求
-            fetch('/preview_images', {
+            fetch('/preview_media', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    currentImagePreviews = data.images;
-                    displayImagePreviews(data.images);
+                    currentImagePreviews = data.media.filter(item => item.type === 'image');
+                    currentMediaPreviews = data.media;
+                    displayMediaPreviews(data.media);
                     toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i> 隱藏預覽';
-                    toggleBtn.onclick = hideImagePreviewGrid;
+                    toggleBtn.onclick = hideMediaPreviewGrid;
                 } else {
                     console.error('預覽失敗:', data.error);
                     toggleBtn.innerHTML = '<i class="fas fa-eye"></i> 顯示預覽';
@@ -1123,6 +1308,85 @@
         
         // 準備對比區域
         function prepareComparisonArea() {
+            if (!currentMediaPreviews || currentMediaPreviews.length === 0) {
+                // 如果没有媒体预览，检查是否有旧的图片预览数据
+                if (!currentImagePreviews || currentImagePreviews.length === 0) return;
+                // 使用旧的图片预览数据创建对比区域
+                prepareImageComparisonArea();
+                return;
+            }
+            
+            const container = document.getElementById('imageComparisonContainer');
+            const content = document.getElementById('comparisonContent');
+            
+            content.innerHTML = '';
+            
+            // 更新标题为媒体对比
+            const titleElement = container.querySelector('h5');
+            if (titleElement) {
+                titleElement.innerHTML = '<i class="fas fa-exchange-alt icon"></i>媒體加密前後對比';
+            }
+            
+            // 為每個媒體文件創建對比區域
+            currentMediaPreviews.forEach(item => {
+                const comparisonDiv = document.createElement('div');
+                comparisonDiv.className = 'comparison-container';
+                
+                let beforeContent = '';
+                let afterTitle = '';
+                
+                if (item.type === 'image') {
+                    beforeContent = `<img src="${item.thumbnail}" alt="${item.filename}" 
+                                   style="max-width: 100%; max-height: 300px; border-radius: 5px;"
+                                   onclick="showImageModal('${item.thumbnail}', '${item.filename}')">`;
+                    afterTitle = '<i class="fas fa-lock icon"></i>加密後: 正在處理...';
+                } else if (item.type === 'video') {
+                    const durationInfo = item.duration ? `<div class="video-duration">${formatDuration(item.duration)}</div>` : '';
+                    beforeContent = `
+                        <div class="video-thumbnail" onclick="showVideoModal('${item.thumbnail}', '${item.filename}', '${JSON.stringify(item).replace(/"/g, '&quot;')}')">
+                            <img src="${item.thumbnail}" alt="${item.filename}" style="max-width: 100%; max-height: 300px; border-radius: 5px;">
+                            <div class="video-play-overlay">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            ${durationInfo}
+                        </div>
+                        ${item.resolution ? `<div class="video-info mt-2">${item.resolution} • ${formatDuration(item.duration || 0)}</div>` : ''}
+                    `;
+                    afterTitle = '<i class="fas fa-lock icon"></i>加密後: 正在處理...';
+                }
+                
+                comparisonDiv.innerHTML = `
+                    <div class="comparison-item">
+                        <div class="comparison-title before-title">
+                            <i class="fas fa-${item.type === 'video' ? 'video' : 'image'} icon"></i>加密前: ${item.filename}
+                        </div>
+                        ${beforeContent}
+                        <div class="image-preview-size">${formatFileSize(item.size)}</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title after-title">
+                            ${afterTitle}
+                        </div>
+                        <div id="encrypted-preview-${item.filename.replace(/[^a-zA-Z0-9]/g, '')}" 
+                             style="min-height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 5px;">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">加密中...</span>
+                                </div>
+                                <div class="text-muted">正在加密處理中...</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                content.appendChild(comparisonDiv);
+            });
+            
+            container.style.display = 'block';
+        }
+        
+        // 準備圖片對比區域（向后兼容）
+        function prepareImageComparisonArea() {
             if (!currentImagePreviews || currentImagePreviews.length === 0) return;
             
             const container = document.getElementById('imageComparisonContainer');
@@ -1178,30 +1442,109 @@
         
         // 隱藏預覽網格
         function hideImagePreviewGrid() {
-            document.getElementById('imagePreviewGrid').innerHTML = '';
+            hideMediaPreviewGrid();
+        }
+        
+        // 隱藏媒體預覽網格
+        function hideMediaPreviewGrid() {
+            document.getElementById('mediaPreviewGrid').innerHTML = '';
             const btn = document.getElementById('togglePreview');
             btn.innerHTML = '<i class="fas fa-eye"></i> 顯示預覽';
             btn.onclick = null;
             btn.addEventListener('click', arguments.callee.caller.caller);
         }
         
-        // 顯示圖片預覽
+        // 顯示圖片預覽（保持兼容性）
         function displayImagePreviews(images) {
-            const grid = document.getElementById('imagePreviewGrid');
+            displayMediaPreviews(images.map(img => ({...img, type: 'image'})));
+        }
+        
+        // 顯示媒體預覽（圖片和視頻）
+        function displayMediaPreviews(mediaItems) {
+            const grid = document.getElementById('mediaPreviewGrid');
             grid.innerHTML = '';
             
-            images.forEach(image => {
-                const item = document.createElement('div');
-                item.className = 'image-preview-item';
+            mediaItems.forEach(item => {
+                const itemDiv = document.createElement('div');
                 
-                item.innerHTML = `
-                    <img src="${image.thumbnail}" alt="${image.filename}" onclick="showImageModal('${image.thumbnail}', '${image.filename}')">
-                    <div class="image-preview-filename">${image.filename}</div>
-                    <div class="image-preview-size">${formatFileSize(image.size)}</div>
+                if (item.type === 'image') {
+                    // 圖片預覽項目
+                    itemDiv.className = 'image-preview-item';
+                    itemDiv.innerHTML = `
+                        <img src="${item.thumbnail}" alt="${item.filename}" onclick="showImageModal('${item.thumbnail}', '${item.filename}')">
+                        <div class="image-preview-filename">${item.filename}</div>
+                        <div class="image-preview-size">${formatFileSize(item.size)}</div>
+                    `;
+                } else if (item.type === 'video') {
+                    // 視頻預覽項目
+                    itemDiv.className = 'video-preview-item';
+                    
+                    const durationInfo = item.duration ? `<div class="video-duration">${formatDuration(item.duration)}</div>` : '';
+                    const videoInfo = [];
+                    if (item.resolution) videoInfo.push(item.resolution);
+                    if (item.fps) videoInfo.push(`${item.fps} fps`);
+                    if (item.duration) videoInfo.push(`${formatDuration(item.duration)}`);
+                    
+                    itemDiv.innerHTML = `
+                        <div class="video-thumbnail" onclick="showVideoModal('${item.thumbnail}', '${item.filename}', '${JSON.stringify(item).replace(/"/g, '&quot;')}')">
+                            <img src="${item.thumbnail}" alt="${item.filename}">
+                            <div class="video-play-overlay">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            ${durationInfo}
+                        </div>
+                        <div class="image-preview-filename">${item.filename}</div>
+                        <div class="image-preview-size">${formatFileSize(item.size)}</div>
+                        ${videoInfo.length > 0 ? `<div class="video-info">${videoInfo.join(' • ')}</div>` : ''}
+                    `;
+                }
+                
+                grid.appendChild(itemDiv);
+            });
+        }
+        
+        // 顯示視頻模態框
+        function showVideoModal(thumbnailSrc, filename, itemDataJson) {
+            try {
+                const itemData = JSON.parse(itemDataJson.replace(/&quot;/g, '"'));
+                
+                // 創建模態框
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.9); z-index: 9999; display: flex;
+                    justify-content: center; align-items: center; cursor: pointer;
                 `;
                 
-                grid.appendChild(item);
-            });
+                const videoInfo = [];
+                if (itemData.resolution) videoInfo.push(`解析度: ${itemData.resolution}`);
+                if (itemData.fps) videoInfo.push(`幀率: ${itemData.fps} fps`);
+                if (itemData.duration) videoInfo.push(`時長: ${formatDuration(itemData.duration)}`);
+                
+                modal.innerHTML = `
+                    <div style="max-width: 90%; max-height: 90%; text-align: center;" onclick="event.stopPropagation();">
+                        <div style="position: relative; display: inline-block;">
+                            <img src="${thumbnailSrc}" style="max-width: 100%; max-height: 70vh; border-radius: 10px;" alt="${filename}">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                                        background: rgba(0,0,0,0.7); border-radius: 50%; width: 80px; height: 80px; 
+                                        display: flex; align-items: center; justify-content: center; color: white; font-size: 30px;">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div style="color: white; margin-top: 15px; font-size: 1.2em; font-weight: bold;">${filename}</div>
+                        <div style="color: #ccc; margin-top: 8px; font-size: 1em;">${formatFileSize(itemData.size)}</div>
+                        ${videoInfo.length > 0 ? `<div style="color: #aaa; margin-top: 8px; font-size: 0.9em;">${videoInfo.join(' • ')}</div>` : ''}
+                        <div style="color: #888; margin-top: 15px; font-size: 0.9em;">視頻縮略圖預覽 • 點擊任意處關閉</div>
+                    </div>
+                `;
+                
+                modal.onclick = () => modal.remove();
+                document.body.appendChild(modal);
+                
+            } catch (error) {
+                console.error('解析視頻數據失敗:', error);
+                showImageModal(thumbnailSrc, filename + ' (視頻縮略圖)');
+            }
         }
         
         // 顯示圖片模態框（放大查看）
@@ -1227,8 +1570,11 @@
         }
         
         // 顯示解密前後對比
-        function showDecryptionComparison(decryptedImages, resultFiles) {
-            if (!decryptedImages || decryptedImages.length === 0) return;
+        function showDecryptionComparison(decryptedImages, resultFiles, decryptedVideos = []) {
+            // 合并图片和视频数据
+            const allDecryptedMedia = [...(decryptedImages || []), ...(decryptedVideos || [])];
+            
+            if (!allDecryptedMedia || allDecryptedMedia.length === 0) return;
             
             const container = document.getElementById('imageComparisonContainer');
             const content = document.getElementById('comparisonContent');
@@ -1245,17 +1591,47 @@
                 encryptedFileName = statusData.source_encrypted_file;
                 console.log('從狀態獲取的加密文件名:', encryptedFileName);
                 
-                // 為每個解密後的圖片創建對比
-                decryptedImages.forEach(image => {
+                // 為每個解密後的媒體文件創建對比
+                allDecryptedMedia.forEach(item => {
                     const comparisonDiv = document.createElement('div');
                     comparisonDiv.className = 'comparison-container';
+                    
+                    let afterContent = '';
+                    const mediaType = item.type || 'image'; // 默认为图片类型（向后兼容）
+                    
+                    if (mediaType === 'image') {
+                        afterContent = `
+                            <img src="${item.thumbnail}" alt="${item.filename}" 
+                                 style="max-width: 100%; max-height: 300px; border-radius: 5px; cursor: pointer;"
+                                 onclick="showImageModal('${item.thumbnail}', '${item.filename} (解密後)')">
+                            <div class="image-preview-size mt-2">${formatFileSize(item.size)}</div>
+                        `;
+                    } else if (mediaType === 'video') {
+                        const durationInfo = item.duration ? `<div class="video-duration">${formatDuration(item.duration)}</div>` : '';
+                        const videoInfo = [];
+                        if (item.resolution) videoInfo.push(item.resolution);
+                        if (item.fps) videoInfo.push(`${item.fps} fps`);
+                        if (item.duration) videoInfo.push(`${formatDuration(item.duration)}`);
+                        
+                        afterContent = `
+                            <div class="video-thumbnail" onclick="showVideoModal('${item.thumbnail}', '${item.filename}', '${JSON.stringify(item).replace(/"/g, '&quot;')}')">
+                                <img src="${item.thumbnail}" alt="${item.filename}" style="max-width: 100%; max-height: 300px; border-radius: 5px;">
+                                <div class="video-play-overlay">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                                ${durationInfo}
+                            </div>
+                            <div class="image-preview-size mt-2">${formatFileSize(item.size)}</div>
+                            ${videoInfo.length > 0 ? `<div class="video-info mt-1">${videoInfo.join(' • ')}</div>` : ''}
+                        `;
+                    }
                     
                     comparisonDiv.innerHTML = `
                         <div class="comparison-item">
                             <div class="comparison-title before-title">
                                 <i class="fas fa-lock icon"></i>解密前: 加密視覺化
                             </div>
-                            <div id="encrypted-visual-${image.filename.replace(/[^a-zA-Z0-9]/g, '')}" 
+                            <div id="encrypted-visual-${item.filename.replace(/[^a-zA-Z0-9]/g, '')}" 
                                  style="min-height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 5px;">
                                 <div class="text-center">
                                     <div class="spinner-border text-danger mb-3" role="status">
@@ -1267,12 +1643,9 @@
                         </div>
                         <div class="comparison-item">
                             <div class="comparison-title after-title">
-                                <i class="fas fa-unlock icon"></i>解密後: ${image.filename}
+                                <i class="fas fa-${mediaType === 'video' ? 'video' : 'image'} icon"></i>解密後: ${item.filename}
                             </div>
-                            <img src="${image.thumbnail}" alt="${image.filename}" 
-                                 style="max-width: 100%; max-height: 300px; border-radius: 5px; cursor: pointer;"
-                                 onclick="showImageModal('${image.thumbnail}', '${image.filename} (解密後)')">
-                            <div class="image-preview-size mt-2">${formatFileSize(image.size)}</div>
+                            ${afterContent}
                         </div>
                     `;
                     
@@ -1281,7 +1654,7 @@
                     // 自動載入加密視覺化
                     if (encryptedFileName) {
                         setTimeout(() => {
-                            loadEncryptedVisualizationForDecryption(encryptedFileName, image.filename);
+                            loadEncryptedVisualizationForDecryption(encryptedFileName, item.filename);
                         }, 500);
                     }
                 });
@@ -1289,48 +1662,92 @@
                 // 更新標題
                 const titleElement = container.querySelector('h5');
                 if (titleElement) {
-                    titleElement.innerHTML = '<i class="fas fa-exchange-alt icon"></i>解密前後對比';
+                    const hasVideo = allDecryptedMedia.some(item => item.type === 'video');
+                    const hasImage = allDecryptedMedia.some(item => item.type === 'image' || !item.type);
+                    
+                    if (hasVideo && hasImage) {
+                        titleElement.innerHTML = '<i class="fas fa-exchange-alt icon"></i>媒體解密前後對比';
+                    } else if (hasVideo) {
+                        titleElement.innerHTML = '<i class="fas fa-exchange-alt icon"></i>視頻解密前後對比';
+                    } else {
+                        titleElement.innerHTML = '<i class="fas fa-exchange-alt icon"></i>圖片解密前後對比';
+                    }
                 }
                 
                 container.style.display = 'block';
             })
             .catch(error => {
                 console.error('獲取狀態失敗:', error);
-                // 即使獲取狀態失敗，也顯示解密後的圖片
-                showDecryptedImagesOnly(decryptedImages);
+                // 即使獲取狀態失敗，也顯示解密後的媒體文件
+                showDecryptedMediaOnly(allDecryptedMedia);
             });
         }
         
-        // 僅顯示解密後的圖片（當無法獲取加密視覺化時的備選方案）
-        function showDecryptedImagesOnly(decryptedImages) {
+        // 僅顯示解密後的媒體文件（當無法獲取加密視覺化時的備選方案）
+        function showDecryptedMediaOnly(decryptedMedia) {
             const container = document.getElementById('imageComparisonContainer');
             const content = document.getElementById('comparisonContent');
             
             content.innerHTML = '';
             
-            decryptedImages.forEach(image => {
-                const imageDiv = document.createElement('div');
-                imageDiv.className = 'comparison-item';
-                imageDiv.style.margin = '0 auto';
-                imageDiv.style.maxWidth = '600px';
+            decryptedMedia.forEach(item => {
+                const mediaDiv = document.createElement('div');
+                mediaDiv.className = 'comparison-item';
+                mediaDiv.style.margin = '0 auto';
+                mediaDiv.style.maxWidth = '600px';
                 
-                imageDiv.innerHTML = `
+                const mediaType = item.type || 'image';
+                let mediaContent = '';
+                
+                if (mediaType === 'image') {
+                    mediaContent = `
+                        <img src="${item.thumbnail}" alt="${item.filename}" 
+                             style="max-width: 100%; max-height: 400px; border-radius: 5px; cursor: pointer;"
+                             onclick="showImageModal('${item.thumbnail}', '${item.filename} (解密後)')">
+                    `;
+                } else if (mediaType === 'video') {
+                    const durationInfo = item.duration ? `<div class="video-duration">${formatDuration(item.duration)}</div>` : '';
+                    const videoInfo = [];
+                    if (item.resolution) videoInfo.push(item.resolution);
+                    if (item.fps) videoInfo.push(`${item.fps} fps`);
+                    if (item.duration) videoInfo.push(`${formatDuration(item.duration)}`);
+                    
+                    mediaContent = `
+                        <div class="video-thumbnail" onclick="showVideoModal('${item.thumbnail}', '${item.filename}', '${JSON.stringify(item).replace(/"/g, '&quot;')}')">
+                            <img src="${item.thumbnail}" alt="${item.filename}" style="max-width: 100%; max-height: 400px; border-radius: 5px;">
+                            <div class="video-play-overlay">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            ${durationInfo}
+                        </div>
+                        ${videoInfo.length > 0 ? `<div class="video-info mt-2">${videoInfo.join(' • ')}</div>` : ''}
+                    `;
+                }
+                
+                mediaDiv.innerHTML = `
                     <div class="comparison-title after-title">
-                        <i class="fas fa-unlock icon"></i>解密完成: ${image.filename}
+                        <i class="fas fa-${mediaType === 'video' ? 'video' : 'image'} icon"></i>解密完成: ${item.filename}
                     </div>
-                    <img src="${image.thumbnail}" alt="${image.filename}" 
-                         style="max-width: 100%; max-height: 400px; border-radius: 5px; cursor: pointer;"
-                         onclick="showImageModal('${image.thumbnail}', '${image.filename} (解密後)')">
-                    <div class="image-preview-size mt-2">${formatFileSize(image.size)}</div>
+                    ${mediaContent}
+                    <div class="image-preview-size mt-2">${formatFileSize(item.size)}</div>
                 `;
                 
-                content.appendChild(imageDiv);
+                content.appendChild(mediaDiv);
             });
             
             // 更新標題
             const titleElement = container.querySelector('h5');
             if (titleElement) {
-                titleElement.innerHTML = '<i class="fas fa-unlock icon"></i>解密後圖片';
+                const hasVideo = decryptedMedia.some(item => item.type === 'video');
+                const hasImage = decryptedMedia.some(item => item.type === 'image' || !item.type);
+                
+                if (hasVideo && hasImage) {
+                    titleElement.innerHTML = '<i class="fas fa-unlock icon"></i>解密後媒體';
+                } else if (hasVideo) {
+                    titleElement.innerHTML = '<i class="fas fa-unlock icon"></i>解密後視頻';
+                } else {
+                    titleElement.innerHTML = '<i class="fas fa-unlock icon"></i>解密後圖片';
+                }
             }
             
             container.style.display = 'block';

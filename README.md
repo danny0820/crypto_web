@@ -1,10 +1,11 @@
-# 資料夾加密/解密 Web 應用程序
+# 資料加密/解密 Web 應用程序
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-4.8.1-red.svg)](https://opencv.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-一個基於Flask的Web應用程序，提供安全的文件夾加密和解密功能，使用AES-GCM和RSA混合加密技術，並具備圖片預覽和加密視覺化功能。
+一個基於Flask的Web應用程序，提供安全的文件加密和解密功能，使用AES-GCM和RSA混合加密技術，並具備圖片、視頻預覽和加密視覺化功能。
 
 ## 🚀 功能特點
 
@@ -14,17 +15,19 @@
 - **安全密鑰管理**：自動生成RSA密鑰對和AES密鑰
 - **文件完整性**：GCM模式提供認證加密，確保數據完整性
 
-### 🖼️ 圖片預覽功能
-- **加密前預覽**：支持常見圖片格式的縮略圖預覽
+### 🎬 媒體預覽功能
+- **圖片預覽**：支持常見圖片格式的縮略圖預覽
+- **視頻預覽**：自動生成視頻縮略圖，顯示視頻信息（時長、解析度、幀率）
 - **加密視覺化**：將加密後的二進制文件轉換為視覺雜訊圖像
 - **前後對比**：並排顯示加密前後的效果對比
-- **解密預覽**：解密完成後可預覽還原的圖片
+- **解密預覽**：解密完成後可預覽還原的媒體文件
 
 ### 🎨 用戶體驗
 - **響應式設計**：支持桌面和移動設備
 - **實時進度**：顯示處理進度和狀態信息
 - **拖拽上傳**：支持文件拖拽上傳
 - **直觀界面**：現代化的用戶界面設計
+- **統一媒體預覽**：圖片和視頻統一展示界面
 
 ## 🛠️ 技術架構
 
@@ -38,6 +41,8 @@
 - **Flask**：輕量級Web框架
 - **Cryptography**：現代加密庫
 - **Pillow**：圖片處理庫
+- **OpenCV**：視頻處理和縮略圖生成
+- **imageio & imageio-ffmpeg**：視頻編解碼支持
 - **NumPy**：數值計算庫
 
 ### 加密算法
@@ -52,13 +57,14 @@
 - pip 包管理器
 
 ### 硬件要求
-- **內存**：最少 512MB，推薦 1GB+
-- **磁盤空間**：最少 100MB 用於臨時文件存儲
+- **內存**：最少 1GB，推薦 2GB+（處理視頻文件需要更多內存）
+- **磁盤空間**：最少 200MB 用於臨時文件存儲
 - **網絡**：運行時需要訪問CDN資源（Bootstrap、Font Awesome）
 
 ### 支持的文件格式
 - **加密**：任意文件和資料夾
 - **圖片預覽**：.jpg, .jpeg, .png, .gif, .bmp, .webp, .tiff, .svg
+- **視頻預覽**：.mp4, .avi, .mov, .mkv, .webm, .flv, .wmv, .m4v, .3gp, .ogv, .ts, .mts, .m2ts
 
 ## 🚀 快速開始
 
@@ -104,9 +110,10 @@ flask --app crypto_web run --host=0.0.0.0 --port=5000
    - 點擊「選擇文件」或「選擇資料夾」
    - 或直接拖拽文件到上傳區域
 
-2. **圖片預覽**（可選）
-   - 如果包含圖片文件，會自動顯示預覽選項
-   - 點擊「顯示預覽」查看縮略圖
+2. **媒體預覽**（可選）
+   - 如果包含圖片或視頻文件，會自動顯示預覽選項
+   - 點擊「顯示預覽」查看縮略圖和媒體信息
+   - 視頻會顯示時長、解析度、幀率等詳細信息
 
 3. **開始加密**
    - 點擊「開始加密」按鈕
@@ -134,7 +141,7 @@ flask --app crypto_web run --host=0.0.0.0 --port=5000
 
 4. **下載結果**
    - 下載解密後的ZIP文件
-   - 如果包含圖片，會顯示解密前後對比
+   - 如果包含圖片或視頻，會顯示解密前後對比
 
 ## 🔧 配置選項
 
@@ -164,9 +171,10 @@ PROCESSED_FOLDER=processed    # 處理結果文件夾
 ├── README.md                 # 系統說明文檔
 ├── processing_status.json    # 處理狀態文件
 ├── templates/
-│   └── index.html            # 前端模板
+│   └── index.html            # 前端模板（包含CSS和JavaScript）
 ├── uploads/                  # 上傳臨時目錄
 ├── processed/               # 處理結果目錄
+├── __pycache__/             # Python字節碼緩存
 └── .git/                   # Git版本控制
 ```
 
@@ -198,6 +206,16 @@ gunicorn -w 4 -b 0.0.0.0:8000 crypto_web:app
 ```dockerfile
 FROM python:3.9-slim
 
+# 安裝系統依賴（OpenCV需要）
+RUN apt-get update && apt-get install -y \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libglib2.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
@@ -223,9 +241,10 @@ pytest tests/
 ### 代碼結構說明
 - **加密模塊**：RSA和AES加密實現
 - **文件處理**：ZIP壓縮和解壓縮
-- **圖片處理**：預覽和視覺化功能
+- **媒體處理**：圖片和視頻預覽功能
+- **視頻處理**：使用OpenCV進行縮略圖生成和信息提取
 - **Web接口**：Flask路由和API
-- **前端交互**：JavaScript和CSS
+- **前端交互**：JavaScript和CSS（內聯在HTML中）
 
 ## 🐛 問題排除
 
@@ -234,8 +253,11 @@ pytest tests/
 **Q: 上傳大文件時出現錯誤**
 A: 檢查 `MAX_CONTENT_LENGTH` 設置，並確保有足夠的磁盤空間
 
-**Q: 圖片預覽不顯示**
-A: 確保安裝了Pillow庫，並檢查圖片文件格式是否支持
+**Q: 圖片/視頻預覽不顯示**
+A: 確保安裝了Pillow和OpenCV庫，並檢查媒體文件格式是否支持
+
+**Q: 視頻縮略圖生成失敗**
+A: 檢查視頻文件是否損壞，確保imageio-ffmpeg正常安裝
 
 **Q: 解密失敗**
 A: 確保使用正確的密鑰文件，並檢查文件是否損壞
@@ -269,7 +291,16 @@ A: 檢查網絡連接，確保可以訪問CDN資源
 
 ## 🔄 更新日誌
 
-### v2.0.0 (最新)
+### v2.1.0 (最新)
+- ✨ 新增視頻預覽功能
+- ✨ 視頻縮略圖自動生成
+- ✨ 視頻信息提取（時長、解析度、幀率）
+- ✨ 統一媒體預覽界面（圖片+視頻）
+- ✨ 視頻加密前後對比功能
+- 🔧 優化色彩轉換（BGR到RGB）
+- 🔧 更新依賴項（添加OpenCV、imageio等）
+
+### v2.0.0
 - ✨ 新增圖片預覽功能
 - ✨ 新增加密視覺化功能
 - ✨ 新增解密前後對比

@@ -14,6 +14,11 @@ cryptography==41.0.4            # 現代加密庫，提供AES-GCM和RSA加密功
 Pillow==10.0.1                  # Python圖像處理庫，用於圖片預覽和視覺化
 numpy==1.24.3                   # 數值計算庫，用於圖片數據處理
 
+# 視頻處理相關
+opencv-python==4.8.1.78         # OpenCV庫，用於視頻處理和縮略圖生成
+imageio==2.31.4                 # 圖像和視頻I/O庫，用於讀取視頻幀
+imageio-ffmpeg==0.4.9           # FFmpeg插件，支持更多視頻格式
+
 # 可選依賴 (開發和生產環境)
 # gunicorn==21.2.0               # WSGI HTTP服務器 (生產環境推薦)
 # python-dotenv==1.0.0          # 環境變量管理
