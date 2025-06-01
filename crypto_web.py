@@ -37,10 +37,13 @@ from PIL import Image  # 用於圖片處理
 import io
 import numpy as np
 
-# 加密相關庫
-from cryptography.hazmat.primitives.asymmetric import rsa, padding  # RSA加密
-from cryptography.hazmat.primitives import serialization, hashes     # 密鑰序列化和哈希
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM      # AES-GCM加密
+# 加密相關庫 - 改用自定義實現
+# from cryptography.hazmat.primitives.asymmetric import rsa, padding  # RSA加密
+# from cryptography.hazmat.primitives import serialization, hashes     # 密鑰序列化和哈希
+# from cryptography.hazmat.primitives.ciphers.aead import AESGCM      # AES-GCM加密
+
+# 使用自定義加密實現
+from custom_crypto import CustomAESGCM, CustomRSA
 
 # 視頻處理相關庫
 import cv2       # OpenCV，用於視頻處理
@@ -214,12 +217,12 @@ def zip_folder(folder_path, output_zip):
                 zipf.write(full_path, relative_path)
 
 # ============================
-# 加密相關函數
+# 加密相關函數 - 使用自定義實現
 # ============================
 
 def generate_rsa_keys():
     """
-    生成RSA金鑰對
+    生成RSA金鑰對 - 使用自定義實現
     
     RSA用於保護AES密鑰，這是混合加密的重要組成部分。
     私鑰用於解密，公鑰用於加密。
@@ -227,64 +230,54 @@ def generate_rsa_keys():
     Returns:
         tuple: (private_key, public_key) RSA私鑰和公鑰對象
     """
-    # 生成2048位RSA密鑰對
-    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    public_key = private_key.public_key()
+    # 使用自定義RSA生成密鑰對
+    private_key, public_key = CustomRSA.generate_key_pair(key_size=2048)
+    print("✅ 使用自定義RSA算法生成密鑰對")
     
     # 將密鑰保存到文件以供下載
     private_key_path = os.path.join(app.config['PROCESSED_FOLDER'], 'private_key.pem')
     public_key_path = os.path.join(app.config['PROCESSED_FOLDER'], 'public_key.pem')
     
-    # 保存私鑰（PEM格式，無密碼保護）
-    with open(private_key_path, 'wb') as f:
-        f.write(private_key.private_bytes(
-            serialization.Encoding.PEM,
-            serialization.PrivateFormat.PKCS8,
-            serialization.NoEncryption()))
+    # 保存密鑰為自定義PEM格式
+    private_pem, public_pem = private_key.to_pem()
     
-    # 保存公鑰（PEM格式）
+    with open(private_key_path, 'wb') as f:
+        f.write(private_pem)
+    
     with open(public_key_path, 'wb') as f:
-        f.write(public_key.public_bytes(
-            serialization.Encoding.PEM,
-            serialization.PublicFormat.SubjectPublicKeyInfo))
+        f.write(public_pem)
     
     return private_key, public_key
 
 def rsa_encrypt(public_key, data: bytes) -> bytes:
     """
-    RSA加密
+    RSA加密 - 使用自定義實現
     
     使用RSA公鑰加密數據。主要用於加密AES密鑰。
     
     Args:
-        public_key: RSA公鑰對象
+        public_key: 自定義RSA公鑰對象
         data (bytes): 要加密的數據
         
     Returns:
         bytes: 加密後的數據
     """
-    return public_key.encrypt(
-        data,
-        padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
-    )
+    return public_key.encrypt(data)
 
 def rsa_decrypt(private_key, data: bytes) -> bytes:
     """
-    RSA解密
+    RSA解密 - 使用自定義實現
     
     使用RSA私鑰解密數據。主要用於解密AES密鑰。
     
     Args:
-        private_key: RSA私鑰對象
+        private_key: 自定義RSA私鑰對象
         data (bytes): 要解密的數據
         
     Returns:
         bytes: 解密後的數據
     """
-    return private_key.decrypt(
-        data,
-        padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
-    )
+    return private_key.decrypt(data)
 
 def unzip_folder(zip_path, extract_to):
     """
@@ -458,8 +451,8 @@ def encrypt_files_process(file_data_list):
 
         # 步驟4：生成AES金鑰和隨機數
         update_status("🔐 正在產生AES金鑰...", 50)
-        aes_key = AESGCM.generate_key(bit_length=256)  # 生成256位AES密鑰
-        aesgcm = AESGCM(aes_key)                       # 創建AES-GCM加密對象
+        aes_key = CustomAESGCM.generate_key(bit_length=256)  # 生成256位AES密鑰
+        aesgcm = CustomAESGCM(aes_key)                       # 創建AES-GCM加密對象
         nonce = secrets.token_bytes(12)                # 生成12字節的隨機數（nonce）
         print("AES金鑰生成完成")
 
@@ -573,7 +566,7 @@ def decrypt_files_process(encrypted_file_path, key_file_path):
         update_status("讀取RSA私鑰...", 10)
         private_key_path = os.path.join(app.config['PROCESSED_FOLDER'], 'private_key.pem')
         with open(private_key_path, 'rb') as f:
-            private_key = serialization.load_pem_private_key(f.read(), password=None)
+            private_key = CustomRSA.from_pem(f.read())
 
         # 步驟2：讀取加密的AES密鑰
         update_status("讀取加密後的AES金鑰...", 20)
@@ -594,7 +587,7 @@ def decrypt_files_process(encrypted_file_path, key_file_path):
         ciphertext = encrypted_data[12:]
 
         # 創建AES-GCM解密對象
-        aesgcm = AESGCM(aes_key)
+        aesgcm = CustomAESGCM(aes_key)
 
         # 步驟5：使用AES-GCM解密數據
         update_status("用AES-GCM解密資料...", 60)
